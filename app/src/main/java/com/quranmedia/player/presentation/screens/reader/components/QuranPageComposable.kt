@@ -75,6 +75,9 @@ import coil.compose.rememberAsyncImagePainter
 import coil.decode.SvgDecoder
 import coil.request.ImageRequest
 import androidx.compose.foundation.Image
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import com.quranmedia.player.R
 import com.quranmedia.player.data.repository.ReadingTheme
 import com.quranmedia.player.domain.model.Ayah
@@ -158,7 +161,10 @@ private fun PageInfoHeader(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 4.dp),
+            .padding(horizontal = 4.dp)
+            .semantics(mergeDescendants = true) {
+                contentDescription = "سورة $surahName، $juzText، $hizbText"
+            },
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -267,12 +273,27 @@ fun QuranPageComposable(
     // Scroll state for landscape mode
     val scrollState = rememberScrollState()
 
+    // Build accessible page description for TalkBack
+    val pageA11yDescription = remember(displayAyahs, pageNumber) {
+        if (displayAyahs.isEmpty()) {
+            "صفحة $pageNumber"
+        } else {
+            val firstAyah = displayAyahs.first()
+            val surahName = surahNamesArabic[firstAyah.surahNumber] ?: ""
+            val ayahTexts = displayAyahs.joinToString(" ") { it.textArabic }
+            "صفحة $pageNumber، سورة $surahName. $ayahTexts"
+        }
+    }
+
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         BoxWithConstraints(
             modifier = modifier
                 .fillMaxSize()
                 .clipToBounds()
                 .background(themeColors.background)
+                .semantics {
+                    contentDescription = pageA11yDescription
+                }
         ) {
             val screenHeight = maxHeight
             val screenWidth = maxWidth
@@ -1143,7 +1164,11 @@ private fun CompactSurahHeader(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 4.dp)
+            .semantics(mergeDescendants = true) {
+                heading()
+                contentDescription = "سورة ${surahNamesArabic[surahNumber] ?: surahNumber}"
+            },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Surah Header with SVG ornate frame
@@ -1172,7 +1197,7 @@ private fun CompactSurahHeader(
 
             Image(
                 painter = painter,
-                contentDescription = null,
+                contentDescription = null, // Decorative, parent has merged semantic description
                 contentScale = ContentScale.FillWidth,
                 modifier = Modifier
                     .fillMaxWidth()

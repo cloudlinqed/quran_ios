@@ -224,6 +224,12 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun setUseQCFFont(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setUseQCFFont(enabled)
+        }
+    }
+
     fun setQCFTajweedMode(enabled: Boolean) {
         viewModelScope.launch {
             settingsRepository.setQCFTajweedMode(enabled)

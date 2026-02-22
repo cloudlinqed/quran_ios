@@ -36,6 +36,8 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.caverock.androidsvg.RenderOptions
 import com.caverock.androidsvg.SVG
@@ -112,10 +114,25 @@ fun SVGPageComposable(
         ReadingThemes.getTheme(readingTheme)
     }
 
+    // Build accessible description for TalkBack with ayah text
+    val pageA11yDescription = remember(ayahs, pageNumber) {
+        if (ayahs.isEmpty()) {
+            "صفحة $pageNumber من القرآن الكريم"
+        } else {
+            val firstAyah = ayahs.first()
+            val surahName = surahNamesArabic[firstAyah.surahNumber] ?: ""
+            val ayahTexts = ayahs.joinToString(" ") { it.textArabic }
+            "صفحة $pageNumber، سورة $surahName. $ayahTexts"
+        }
+    }
+
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(themeColors.background)
+            .semantics {
+                contentDescription = pageA11yDescription
+            }
             .pointerInput(Unit) {
                 detectTapGestures(onTap = { onTap?.invoke() })
             },
@@ -169,7 +186,7 @@ fun SVGPageComposable(
                             ) {
                                 Image(
                                     bitmap = page.bitmap.asImageBitmap(),
-                                    contentDescription = "Quran Page $pageNumber",
+                                    contentDescription = null, // Parent provides full accessible description
                                     modifier = Modifier.fillMaxSize(),
                                     contentScale = ContentScale.FillBounds
                                 )
@@ -189,7 +206,7 @@ fun SVGPageComposable(
                         Box(modifier = Modifier.fillMaxSize()) {
                             Image(
                                 bitmap = page.bitmap.asImageBitmap(),
-                                contentDescription = "Quran Page $pageNumber",
+                                contentDescription = null, // Parent provides full accessible description
                                 modifier = Modifier.fillMaxSize(),
                                 contentScale = ContentScale.FillBounds
                             )
@@ -263,14 +280,16 @@ private fun renderSvgBitmap(
         val scaledH = picH * scale
 
         val targetScaledH = ceil(scaledH).toInt()
+        // Compose Constraints limit: max 262143 pixels. Cap to avoid bitsNeedForSize crash.
+        val maxComposePx = 262143
         val bitmapH = if (isLandscape) {
-            maxOf(containerH, targetScaledH)
+            maxOf(containerH, targetScaledH).coerceAtMost(maxComposePx)
         } else {
             containerH
         }
 
         // Create output bitmap (can be taller in landscape to enable vertical scrolling)
-        val bmp = Bitmap.createBitmap(containerW, bitmapH, Bitmap.Config.ARGB_8888)
+        val bmp = Bitmap.createBitmap(containerW, bitmapH.coerceAtMost(maxComposePx), Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bmp)
         canvas.drawColor(bgColor)
 

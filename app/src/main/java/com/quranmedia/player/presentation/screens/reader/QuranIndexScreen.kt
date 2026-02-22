@@ -214,7 +214,7 @@ fun QuranIndexScreen(
                                             Row(verticalAlignment = Alignment.CenterVertically) {
                                                 Icon(
                                                     Icons.Default.Settings,
-                                                    contentDescription = null,
+                                                    contentDescription = Strings.settings.get(language),
                                                     tint = islamicGreen,
                                                     modifier = Modifier.size(20.dp)
                                                 )
@@ -237,7 +237,7 @@ fun QuranIndexScreen(
                                             Row(verticalAlignment = Alignment.CenterVertically) {
                                                 Icon(
                                                     Icons.Default.Schedule,
-                                                    contentDescription = null,
+                                                    contentDescription = if (language == AppLanguage.ARABIC) "مواقيت الصلاة" else "Prayer Times",
                                                     tint = islamicGreen,
                                                     modifier = Modifier.size(20.dp)
                                                 )
@@ -260,7 +260,7 @@ fun QuranIndexScreen(
                                             Row(verticalAlignment = Alignment.CenterVertically) {
                                                 Icon(
                                                     Icons.Default.WbSunny,
-                                                    contentDescription = null,
+                                                    contentDescription = if (language == AppLanguage.ARABIC) "الأذكار" else "Athkar",
                                                     tint = islamicGreen,
                                                     modifier = Modifier.size(20.dp)
                                                 )
@@ -283,7 +283,7 @@ fun QuranIndexScreen(
                                             Row(verticalAlignment = Alignment.CenterVertically) {
                                                 Icon(
                                                     Icons.Default.CheckCircle,
-                                                    contentDescription = null,
+                                                    contentDescription = if (language == AppLanguage.ARABIC) "المتابعة اليومية" else "Daily Tracker",
                                                     tint = islamicGreen,
                                                     modifier = Modifier.size(20.dp)
                                                 )
@@ -306,7 +306,7 @@ fun QuranIndexScreen(
                                             Row(verticalAlignment = Alignment.CenterVertically) {
                                                 Icon(
                                                     Icons.Default.CloudDownload,
-                                                    contentDescription = null,
+                                                    contentDescription = Strings.downloads.get(language),
                                                     tint = islamicGreen,
                                                     modifier = Modifier.size(20.dp)
                                                 )
@@ -329,7 +329,7 @@ fun QuranIndexScreen(
                                             Row(verticalAlignment = Alignment.CenterVertically) {
                                                 Icon(
                                                     Icons.Default.NightsStay,
-                                                    contentDescription = null,
+                                                    contentDescription = if (language == AppLanguage.ARABIC) "إمساكية رمضان" else "Ramadan Imsakiya",
                                                     tint = islamicGreen,
                                                     modifier = Modifier.size(20.dp)
                                                 )
@@ -352,7 +352,7 @@ fun QuranIndexScreen(
                                             Row(verticalAlignment = Alignment.CenterVertically) {
                                                 Icon(
                                                     Icons.Default.Info,
-                                                    contentDescription = null,
+                                                    contentDescription = Strings.about.get(language),
                                                     tint = islamicGreen,
                                                     modifier = Modifier.size(20.dp)
                                                 )
@@ -433,7 +433,7 @@ fun QuranIndexScreen(
                                             1 -> Icons.AutoMirrored.Filled.List
                                             else -> Icons.Default.Bookmark
                                         },
-                                        contentDescription = null,
+                                        contentDescription = title,
                                         modifier = Modifier.size(18.dp)
                                     )
                                     Text(
@@ -570,7 +570,7 @@ private fun SearchResultsContent(
                 ) {
                     Icon(
                         Icons.Default.Search,
-                        contentDescription = null,
+                        contentDescription = if (language == AppLanguage.ARABIC) "بحث" else "Search",
                         modifier = Modifier.size(48.dp),
                         tint = islamicGreen.copy(alpha = 0.4f)
                     )
@@ -1348,7 +1348,7 @@ private fun ReadingBookmarksTab(
             ) {
                 Icon(
                     Icons.Default.Bookmark,
-                    contentDescription = null,
+                    contentDescription = if (language == AppLanguage.ARABIC) "لا توجد علامات محفوظة" else "No bookmarks yet",
                     tint = islamicGreen.copy(alpha = 0.4f),
                     modifier = Modifier.size(64.dp)
                 )
@@ -1423,7 +1423,7 @@ private fun BookmarkListItem(
             ) {
                 Icon(
                     Icons.Default.Bookmark,
-                    contentDescription = null,
+                    contentDescription = if (language == AppLanguage.ARABIC) "علامة مرجعية" else "Bookmark",
                     tint = goldAccent,
                     modifier = Modifier.size(24.dp)
                 )
@@ -1467,7 +1467,7 @@ private fun BookmarkListItem(
                     ) {
                         Icon(
                             Icons.Default.TrendingUp,
-                            contentDescription = null,
+                            contentDescription = if (language == AppLanguage.ARABIC) "الهدف اليومي" else "Daily target",
                             tint = goldAccent,
                             modifier = Modifier.size(14.dp)
                         )

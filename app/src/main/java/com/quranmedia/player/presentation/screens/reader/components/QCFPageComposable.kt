@@ -63,6 +63,8 @@ import com.quranmedia.player.domain.model.Ayah
 import com.quranmedia.player.presentation.screens.reader.HighlightedAyah
 import com.quranmedia.player.presentation.theme.ReadingThemeColors
 import com.quranmedia.player.presentation.theme.ReadingThemes
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 
 private const val STANDARD_LINE_COUNT = 15
 private const val BASE_WIDTH_DP = 400f
@@ -196,10 +198,25 @@ fun QCFPageComposable(
         null // Let embedded colors show through
     }
 
+    // Build accessible description for TalkBack
+    val pageA11yDescription = remember(ayahs, pageNumber) {
+        if (ayahs.isEmpty()) {
+            "صفحة $pageNumber من القرآن الكريم"
+        } else {
+            val firstAyah = ayahs.first()
+            val surahName = surahNamesArabic[firstAyah.surahNumber] ?: ""
+            val ayahTexts = ayahs.joinToString(" ") { it.textArabic }
+            "صفحة $pageNumber، سورة $surahName. $ayahTexts"
+        }
+    }
+
     BoxWithConstraints(
         modifier = modifier
             .fillMaxSize()
             .background(themeColors.background)
+            .semantics {
+                contentDescription = pageA11yDescription
+            }
             .pointerInput(onTap) {
                 detectTapGestures(onTap = { onTap?.invoke() })
             }
@@ -492,6 +509,9 @@ private fun QCFSurahHeaderWithSVG(
             .fillMaxWidth()
             .height(headerHeight)
             .padding(vertical = 2.dp)
+            .semantics(mergeDescendants = true) {
+                contentDescription = "سورة $surahName"
+            }
             .pointerInput(onTap) {
                 detectTapGestures(onTap = { onTap?.invoke() })
             },

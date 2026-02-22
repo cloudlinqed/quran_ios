@@ -1,6 +1,10 @@
 package com.quranmedia.player.presentation.screens.reader
 
+import android.content.Context
 import android.content.res.Configuration
+import android.view.accessibility.AccessibilityManager
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -130,8 +134,16 @@ fun QuranReaderScreen(
     // Immersive mode - controls hidden by default
     var showControls by remember { mutableStateOf(false) }
 
-    // Enable immersive mode - hide system bars when controls are hidden
+    // Detect TalkBack - force plain text rendering for accessibility
     val context = androidx.compose.ui.platform.LocalContext.current
+    val accessibilityManager = remember {
+        context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
+    }
+    val isTalkBackActive = remember {
+        accessibilityManager.isEnabled && accessibilityManager.isTouchExplorationEnabled
+    }
+
+    // Enable immersive mode - hide system bars when controls are hidden
     val window = (context as? android.app.Activity)?.window
     val insetsController = window?.let {
         androidx.core.view.WindowCompat.getInsetsController(it, it.decorView)
@@ -180,7 +192,7 @@ fun QuranReaderScreen(
     // Check QCF/SVG mode availability at screen level (for controlling zoom button)
     val svgAvailable = viewModel.qcfAssetLoader.isSVGAvailable()
     val v4FontsAvailable = viewModel.isV4FontsDownloaded()
-    val isQCFModeActive = settings.useQCFFont && (svgAvailable || v4FontsAvailable)
+    val isQCFModeActive = settings.useQCFFont && (svgAvailable || v4FontsAvailable) && !isTalkBackActive
 
     // In SPLIT mode, each real page becomes 2 virtual pages (first half, second half)
     val virtualPageCount = when (zoomMode) {
@@ -397,8 +409,8 @@ fun QuranReaderScreen(
                     val v4Available = viewModel.isV4FontsDownloaded()
                     val svgIsAvailable = viewModel.qcfAssetLoader.isSVGAvailable()
                     val isTajweedMode = settings.qcfTajweedMode && v4Available
-                    val useSVGMode = settings.useQCFFont && !isTajweedMode && svgIsAvailable
-                    val useQCFMode = settings.useQCFFont && isTajweedMode
+                    val useSVGMode = settings.useQCFFont && !isTajweedMode && svgIsAvailable && !isTalkBackActive
+                    val useQCFMode = settings.useQCFFont && isTajweedMode && !isTalkBackActive
 
                     if (useSVGMode) {
                         // SVG Mode - render full-page SVG vector graphics
@@ -596,7 +608,7 @@ fun QuranReaderScreen(
                         IconButton(onClick = onBack) {
                             Icon(
                                 Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
+                                contentDescription = if (language == AppLanguage.ARABIC) "رجوع" else "Back",
                                 tint = themeColors.topBarContent
                             )
                         }
@@ -612,7 +624,7 @@ fun QuranReaderScreen(
                                 when (currentDownloadState) {
                                     is DownloadState.Downloaded -> Icon(
                                         Icons.Default.CloudDone,
-                                        contentDescription = "Downloaded",
+                                        contentDescription = if (language == AppLanguage.ARABIC) "تم التحميل" else "Downloaded",
                                         tint = themeColors.ayahMarker
                                     )
                                     is DownloadState.Downloading -> CircularProgressIndicator(
@@ -623,7 +635,7 @@ fun QuranReaderScreen(
                                     )
                                     else -> Icon(
                                         Icons.Default.CloudDownload,
-                                        contentDescription = "Download",
+                                        contentDescription = if (language == AppLanguage.ARABIC) "تحميل" else "Download",
                                         tint = themeColors.topBarContent
                                     )
                                 }
@@ -632,8 +644,12 @@ fun QuranReaderScreen(
                         IconButton(onClick = { viewModel.toggleBookmarkCurrentPage() }) {
                             Icon(
                                 if (state.isCurrentPageBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                                contentDescription = "Bookmark",
-                                tint = if (state.isCurrentPageBookmarked) themeColors.ayahMarker else themeColors.topBarContent
+                                contentDescription = if (language == AppLanguage.ARABIC) {
+                                    if (state.isCurrentPageBookmarked) "إزالة العلامة المرجعية" else "إضافة علامة مرجعية"
+                                } else {
+                                    if (state.isCurrentPageBookmarked) "Remove bookmark" else "Add bookmark"
+                                },
+                                tint = if (state.isCurrentPageBookmarked) themeColors.highlight else themeColors.topBarContent
                             )
                         }
                         // Hide zoom button in QCF mode (split doesn't work with per-page fonts)
@@ -666,7 +682,11 @@ fun QuranReaderScreen(
                                         ZoomMode.SPLIT -> Icons.Default.ZoomOut           // Can zoom out
                                         ZoomMode.FIT_SCREEN -> Icons.Default.ZoomIn       // Fallback
                                     },
-                                    contentDescription = "Zoom",
+                                    contentDescription = if (language == AppLanguage.ARABIC) {
+                                        if (zoomMode == ZoomMode.ZOOMED) "تكبير" else "تصغير"
+                                    } else {
+                                        if (zoomMode == ZoomMode.ZOOMED) "Zoom in" else "Zoom out"
+                                    },
                                     tint = themeColors.topBarContent
                                 )
                             }
@@ -699,7 +719,7 @@ fun QuranReaderScreen(
                                         showGoToPageDialog = true
                                     },
                                     leadingIcon = {
-                                        Icon(Icons.Default.Numbers, contentDescription = null)
+                                        Icon(Icons.Default.Numbers, contentDescription = if (language == AppLanguage.ARABIC) "الذهاب إلى صفحة" else "Go to page")
                                     }
                                 )
                                 // Settings
@@ -715,7 +735,7 @@ fun QuranReaderScreen(
                                         onNavigateToSettings()
                                     },
                                     leadingIcon = {
-                                        Icon(Icons.Default.Settings, contentDescription = null)
+                                        Icon(Icons.Default.Settings, contentDescription = if (language == AppLanguage.ARABIC) "الإعدادات" else "Settings")
                                     }
                                 )
                                 // Prayer Times
@@ -731,7 +751,7 @@ fun QuranReaderScreen(
                                         onNavigateToPrayerTimes()
                                     },
                                     leadingIcon = {
-                                        Icon(Icons.Default.Schedule, contentDescription = null)
+                                        Icon(Icons.Default.Schedule, contentDescription = if (language == AppLanguage.ARABIC) "مواقيت الصلاة" else "Prayer Times")
                                     }
                                 )
                                 // Athkar
@@ -747,7 +767,7 @@ fun QuranReaderScreen(
                                         onNavigateToAthkar()
                                     },
                                     leadingIcon = {
-                                        Icon(Icons.Default.WbSunny, contentDescription = null)
+                                        Icon(Icons.Default.WbSunny, contentDescription = if (language == AppLanguage.ARABIC) "الأذكار" else "Athkar")
                                     }
                                 )
                                 // Daily Tracker
@@ -763,7 +783,7 @@ fun QuranReaderScreen(
                                         onNavigateToTracker()
                                     },
                                     leadingIcon = {
-                                        Icon(Icons.Default.CheckCircle, contentDescription = null)
+                                        Icon(Icons.Default.CheckCircle, contentDescription = if (language == AppLanguage.ARABIC) "المتابعة اليومية" else "Daily Tracker")
                                     }
                                 )
                                 // Downloads
@@ -779,7 +799,7 @@ fun QuranReaderScreen(
                                         onNavigateToDownloads()
                                     },
                                     leadingIcon = {
-                                        Icon(Icons.Default.CloudDownload, contentDescription = null)
+                                        Icon(Icons.Default.CloudDownload, contentDescription = if (language == AppLanguage.ARABIC) "التحميلات" else "Downloads")
                                     }
                                 )
                                 // Ramadan Imsakiya (TODO: Remove after Ramadan)
@@ -795,7 +815,7 @@ fun QuranReaderScreen(
                                         onNavigateToImsakiya()
                                     },
                                     leadingIcon = {
-                                        Icon(Icons.Default.NightsStay, contentDescription = null)
+                                        Icon(Icons.Default.NightsStay, contentDescription = if (language == AppLanguage.ARABIC) "إمساكية رمضان" else "Ramadan Imsakiya")
                                     }
                                 )
                                 // About
@@ -811,7 +831,7 @@ fun QuranReaderScreen(
                                         onNavigateToAbout()
                                     },
                                     leadingIcon = {
-                                        Icon(Icons.Default.Info, contentDescription = null)
+                                        Icon(Icons.Default.Info, contentDescription = if (language == AppLanguage.ARABIC) "حول التطبيق" else "About")
                                     }
                                 )
                             }
@@ -983,7 +1003,7 @@ fun QuranReaderScreen(
                             ) {
                                 Icon(
                                     Icons.Default.PlayArrow,
-                                    contentDescription = "Play",
+                                    contentDescription = if (language == AppLanguage.ARABIC) "تشغيل" else "Play",
                                     tint = themeColors.accent,
                                     modifier = Modifier.size(22.dp)
                                 )
@@ -1002,7 +1022,7 @@ fun QuranReaderScreen(
                             ) {
                                 Icon(
                                     Icons.Default.ContentCopy,
-                                    contentDescription = "Copy",
+                                    contentDescription = if (language == AppLanguage.ARABIC) "نسخ" else "Copy",
                                     tint = themeColors.accent,
                                     modifier = Modifier.size(20.dp)
                                 )
@@ -1019,8 +1039,8 @@ fun QuranReaderScreen(
                             ) {
                                 Icon(
                                     if (state.isCurrentPageBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                                    contentDescription = "Bookmark",
-                                    tint = if (state.isCurrentPageBookmarked) themeColors.ayahMarker else themeColors.accent,
+                                    contentDescription = if (language == AppLanguage.ARABIC) "علامة مرجعية" else "Bookmark",
+                                    tint = if (state.isCurrentPageBookmarked) themeColors.highlight else themeColors.accent,
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
@@ -1038,7 +1058,7 @@ fun QuranReaderScreen(
                             ) {
                                 Icon(
                                     Icons.Default.MenuBook,
-                                    contentDescription = "Tafseer",
+                                    contentDescription = if (language == AppLanguage.ARABIC) "تفسير" else "Tafseer",
                                     tint = themeColors.accent,
                                     modifier = Modifier.size(20.dp)
                                 )
@@ -1054,7 +1074,7 @@ fun QuranReaderScreen(
                             ) {
                                 Icon(
                                     Icons.Default.Repeat,
-                                    contentDescription = "Custom Recitation",
+                                    contentDescription = if (language == AppLanguage.ARABIC) "تلاوة مخصصة" else "Custom Recitation",
                                     tint = themeColors.accent,
                                     modifier = Modifier.size(20.dp)
                                 )
@@ -1231,7 +1251,7 @@ private fun EnhancedPlaybackControlBar(
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.Default.RecordVoiceOver, null, tint = themeColors.accent, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.RecordVoiceOver, if (language == AppLanguage.ARABIC) "القارئ" else "Reciter", tint = themeColors.accent, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
@@ -1261,7 +1281,8 @@ private fun EnhancedPlaybackControlBar(
                             }
                             Icon(
                                 if (showReciterMenu) Icons.Default.ArrowDropUp else Icons.Default.ArrowDropDown,
-                                null, tint = themeColors.accent, modifier = Modifier.size(16.dp)
+                                if (language == AppLanguage.ARABIC) "اختيار القارئ" else "Select reciter",
+                                tint = themeColors.accent, modifier = Modifier.size(16.dp)
                             )
                         }
                     }
@@ -1288,7 +1309,7 @@ private fun EnhancedPlaybackControlBar(
                                     )
                                 },
                                 onClick = { onReciterSelected(reciter); showReciterMenu = false },
-                                leadingIcon = if (isSelected) {{ Icon(Icons.Default.Check, null, tint = themeColors.accent, modifier = Modifier.size(18.dp)) }} else null
+                                leadingIcon = if (isSelected) {{ Icon(Icons.Default.Check, if (language == AppLanguage.ARABIC) "محدد" else "Selected", tint = themeColors.accent, modifier = Modifier.size(18.dp)) }} else null
                             )
                         }
                     }
@@ -1302,7 +1323,15 @@ private fun EnhancedPlaybackControlBar(
                     ) {
                         if (hasActivePlayback) {
                             Box(
-                                modifier = Modifier.size(36.dp).clip(CircleShape).background(themeColors.accentLight.copy(alpha = 0.15f)).clickable { onSpeedClick() },
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(themeColors.accentLight.copy(alpha = 0.15f))
+                                    .clickable { onSpeedClick() }
+                                    .semantics {
+                                        contentDescription = if (language == AppLanguage.ARABIC)
+                                            "سرعة التشغيل ${playbackSpeed}x" else "Playback speed ${playbackSpeed}x"
+                                    },
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text("${playbackSpeed}x", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = themeColors.accent)
@@ -1310,7 +1339,15 @@ private fun EnhancedPlaybackControlBar(
                         }
 
                         Box(
-                            modifier = Modifier.size(36.dp).clip(CircleShape).background(if (ayahRepeatCount > 1) themeColors.accent.copy(alpha = 0.2f) else themeColors.accentLight.copy(alpha = 0.15f)).clickable { onRepeatClick() },
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(if (ayahRepeatCount > 1) themeColors.accent.copy(alpha = 0.2f) else themeColors.accentLight.copy(alpha = 0.15f))
+                                .clickable { onRepeatClick() }
+                                .semantics {
+                                    contentDescription = if (language == AppLanguage.ARABIC)
+                                        "تكرار الآية $ayahRepeatCount مرات" else "Repeat ayah $ayahRepeatCount times"
+                                },
                             contentAlignment = Alignment.Center
                         ) {
                             Text("${ayahRepeatCount}×", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = if (ayahRepeatCount > 1) themeColors.accent else themeColors.textSecondary)
@@ -1339,7 +1376,11 @@ private fun EnhancedPlaybackControlBar(
                             ) {
                                 Icon(
                                     Icons.Default.SkipPrevious,
-                                    if (isRtl) "Next Ayah" else "Previous Ayah",
+                                    if (isRtl) {
+                                        if (language == AppLanguage.ARABIC) "الآية التالية" else "Next Ayah"
+                                    } else {
+                                        if (language == AppLanguage.ARABIC) "الآية السابقة" else "Previous Ayah"
+                                    },
                                     tint = themeColors.accent,
                                     modifier = Modifier.size(22.dp)
                                 )
@@ -1351,7 +1392,15 @@ private fun EnhancedPlaybackControlBar(
                             colors = IconButtonDefaults.filledIconButtonColors(containerColor = themeColors.accent, contentColor = if (themeColors.isDark) Color.Black else Color.White),
                             modifier = Modifier.size(44.dp)
                         ) {
-                            Icon(if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, "Play/Pause", modifier = Modifier.size(26.dp))
+                            Icon(
+                                if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                if (language == AppLanguage.ARABIC) {
+                                    if (isPlaying) "إيقاف مؤقت" else "تشغيل"
+                                } else {
+                                    if (isPlaying) "Pause" else "Play"
+                                },
+                                modifier = Modifier.size(26.dp)
+                            )
                         }
 
                         if (hasActivePlayback) {
@@ -1362,7 +1411,11 @@ private fun EnhancedPlaybackControlBar(
                             ) {
                                 Icon(
                                     Icons.Default.SkipNext,
-                                    if (isRtl) "Previous Ayah" else "Next Ayah",
+                                    if (isRtl) {
+                                        if (language == AppLanguage.ARABIC) "الآية السابقة" else "Previous Ayah"
+                                    } else {
+                                        if (language == AppLanguage.ARABIC) "الآية التالية" else "Next Ayah"
+                                    },
                                     tint = themeColors.accent,
                                     modifier = Modifier.size(22.dp)
                                 )
@@ -1373,7 +1426,7 @@ private fun EnhancedPlaybackControlBar(
                                 colors = IconButtonDefaults.filledIconButtonColors(containerColor = themeColors.divider, contentColor = themeColors.textPrimary),
                                 modifier = Modifier.size(36.dp)
                             ) {
-                                Icon(Icons.Default.Stop, "Stop", modifier = Modifier.size(20.dp))
+                                Icon(Icons.Default.Stop, if (language == AppLanguage.ARABIC) "إيقاف" else "Stop", modifier = Modifier.size(20.dp))
                             }
                         }
                     }

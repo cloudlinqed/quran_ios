@@ -630,6 +630,72 @@ private fun ReadingSettingsContent(
             title = if (language == AppLanguage.ARABIC) "إعدادات العرض" else "Display Settings",
             language = language
         ) {
+            // Mushaf Font selector
+            Text(
+                text = if (language == AppLanguage.ARABIC) "خط المصحف" else "Mushaf Font",
+                fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                color = islamicGreen,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                val options = listOf(true, false) // true = SVG, false = Plain Text
+                options.forEach { isQCF ->
+                    val isSelected = settings.useQCFFont == isQCF
+                    val label = if (isQCF) {
+                        if (language == AppLanguage.ARABIC) "خط المصحف" else "Mushaf Font"
+                    } else {
+                        if (language == AppLanguage.ARABIC) "نص عادي" else "Plain Text"
+                    }
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(
+                                if (isSelected) islamicGreen.copy(alpha = 0.15f)
+                                else Color.Gray.copy(alpha = 0.08f)
+                            )
+                            .border(
+                                width = if (isSelected) 1.5.dp else 0.5.dp,
+                                color = if (isSelected) islamicGreen else Color.Gray.copy(alpha = 0.3f),
+                                shape = RoundedCornerShape(10.dp)
+                            )
+                            .clickable { viewModel.setUseQCFFont(isQCF) }
+                            .padding(vertical = 10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = label,
+                            fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
+                            fontSize = 13.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            color = if (isSelected) islamicGreen else Color.Gray
+                        )
+                    }
+                }
+            }
+
+            Text(
+                text = if (language == AppLanguage.ARABIC)
+                    "يتم التبديل تلقائيًا للنص العادي عند تفعيل TalkBack"
+                else
+                    "Automatically switches to Plain Text when TalkBack is enabled",
+                fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
+                fontSize = 11.sp,
+                color = Color.Gray,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 8.dp),
+                color = Color.Gray.copy(alpha = 0.2f)
+            )
+
             // Tajweed font download
             Text(
                 text = if (language == AppLanguage.ARABIC) "خطوط التجويد" else "Tajweed Font",
