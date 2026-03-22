@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.quranmedia.player.R
+import com.quranmedia.player.presentation.theme.AppTheme
 
 // Arabic Quranic font
 private val quranFontFamily = FontFamily(
@@ -61,9 +62,9 @@ fun PlayerScreenNew(
     }
 
     // Islamic green theme colors
-    val islamicGreen = Color(0xFF2E7D32)
+    val islamicGreen = AppTheme.colors.islamicGreen
     val lightGreen = Color(0xFF66BB6A)
-    val darkGreen = Color(0xFF1B5E20)
+    val darkGreen = AppTheme.colors.darkGreen
     val goldAccent = Color(0xFFFFD700)
 
     Scaffold(
@@ -106,7 +107,7 @@ fun PlayerScreenNew(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, "Back", tint = Color.White)
+                        Icon(Icons.Default.ArrowBack, "Back", tint = AppTheme.colors.textOnHeader)
                     }
                 },
                 actions = {
@@ -120,13 +121,13 @@ fun PlayerScreenNew(
                                 Icon(
                                     Icons.Default.CloudDownload,
                                     contentDescription = "Download Surah",
-                                    tint = Color.White
+                                    tint = AppTheme.colors.textOnHeader
                                 )
                             }
                             is DownloadButtonState.Downloading -> {
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(24.dp),
-                                    color = Color.White,
+                                    color = AppTheme.colors.textOnHeader,
                                     strokeWidth = 2.dp
                                 )
                             }
@@ -141,14 +142,14 @@ fun PlayerScreenNew(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = islamicGreen,
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White,
-                    actionIconContentColor = Color.White
+                    containerColor = AppTheme.colors.topBarBackground,
+                    titleContentColor = AppTheme.colors.textOnHeader,
+                    navigationIconContentColor = AppTheme.colors.textOnHeader,
+                    actionIconContentColor = AppTheme.colors.textOnHeader
                 )
             )
         },
-        containerColor = Color(0xFFF5F5F5)
+        containerColor = AppTheme.colors.surfaceVariant
     ) { paddingValues ->
         var showSpeedDialog by remember { mutableStateOf(false) }
 
@@ -171,7 +172,7 @@ fun PlayerScreenNew(
                         .padding(16.dp),
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = Color.White
+                        containerColor = AppTheme.colors.cardBackground
                     ),
                     elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                 ) {
@@ -236,7 +237,7 @@ fun PlayerScreenNew(
                                     onDismissRequest = { ayahDropdownExpanded = false },
                                     modifier = Modifier
                                         .heightIn(max = 300.dp)
-                                        .background(Color.White)
+                                        .background(AppTheme.colors.cardBackground)
                                 ) {
                                     for (ayahNum in 1..playbackState.totalAyahs!!) {
                                         val isCurrentAyah = ayahNum == playbackState.currentAyah
@@ -245,7 +246,7 @@ fun PlayerScreenNew(
                                                 Text(
                                                     text = "آية $ayahNum",
                                                     style = MaterialTheme.typography.bodyMedium.copy(
-                                                        color = if (isCurrentAyah) Color.White else darkGreen,
+                                                        color = if (isCurrentAyah) AppTheme.colors.textOnPrimary else darkGreen,
                                                         fontWeight = if (isCurrentAyah) FontWeight.Bold else FontWeight.Normal,
                                                         fontSize = 14.sp
                                                     )
@@ -258,7 +259,7 @@ fun PlayerScreenNew(
                                             colors = MenuDefaults.itemColors(
                                                 textColor = darkGreen,
                                                 leadingIconColor = darkGreen,
-                                                disabledTextColor = Color.Gray
+                                                disabledTextColor = AppTheme.colors.textSecondary
                                             ),
                                             modifier = Modifier.background(
                                                 if (isCurrentAyah) islamicGreen else Color.Transparent
@@ -310,7 +311,7 @@ fun PlayerScreenNew(
                                             ),
                                             fontSize = fontSize,
                                             textAlign = TextAlign.Center,
-                                            color = Color.Black,
+                                            color = AppTheme.colors.textPrimary,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis,
                                             modifier = Modifier
@@ -347,7 +348,7 @@ fun PlayerScreenNew(
                                         fontSize = fontSize,
                                         lineHeight = lineHeight,
                                         textAlign = TextAlign.Center,
-                                        color = Color.Black,
+                                        color = AppTheme.colors.textPrimary,
                                         modifier = Modifier.fillMaxWidth()
                                     )
                                 }
@@ -367,7 +368,7 @@ fun PlayerScreenNew(
             // Fixed bottom control bar
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = Color.White,
+                color = AppTheme.colors.cardBackground,
                 shadowElevation = 8.dp
             ) {
                 Column(
@@ -402,13 +403,13 @@ fun PlayerScreenNew(
                         Text(
                             formatTime(playbackState.currentPosition),
                             style = MaterialTheme.typography.labelSmall,
-                            color = Color.Gray,
+                            color = AppTheme.colors.textSecondary,
                             fontSize = 10.sp
                         )
                         Text(
                             formatTime(playbackState.duration),
                             style = MaterialTheme.typography.labelSmall,
-                            color = Color.Gray,
+                            color = AppTheme.colors.textSecondary,
                             fontSize = 10.sp
                         )
                     }
@@ -456,7 +457,7 @@ fun PlayerScreenNew(
                             onClick = { viewModel.togglePlayPause() },
                             colors = IconButtonDefaults.filledIconButtonColors(
                                 containerColor = islamicGreen,
-                                contentColor = Color.White
+                                contentColor = AppTheme.colors.textOnPrimary
                             ),
                             modifier = Modifier.size(52.dp)
                         ) {
@@ -534,7 +535,7 @@ fun PlayerScreenNew(
                                     text = "${speed}x",
                                     fontSize = 16.sp,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (isSelected) islamicGreen else Color.Black
+                                    color = if (isSelected) islamicGreen else AppTheme.colors.textPrimary
                                 )
                                 if (isSelected) {
                                     Icon(

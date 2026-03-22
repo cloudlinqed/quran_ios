@@ -63,22 +63,22 @@ object ReadingThemes {
         isDark = false
     )
 
-    // Night theme - True dark for OLED screens
+    // Night theme - Dark grey for comfortable reading
     val Night = ReadingThemeColors(
-        background = Color(0xFF000000),      // Pure black
-        surface = Color(0xFF121212),
-        textPrimary = Color(0xFFB0B0B0),     // Dimmed text for eye comfort
-        textSecondary = Color(0xFF757575),
+        background = Color(0xFF1A1A1A),      // Warm dark grey (not pure black)
+        surface = Color(0xFF242424),
+        textPrimary = Color(0xFFCCC8C3),     // Warm off-white for comfort
+        textSecondary = Color(0xFF8A8580),
         accent = Color(0xFF4A6B4D),          // Dimmed muted green for header
         accentLight = Color(0xFF3D5C40),     // Even more dimmed for accents
-        divider = Color(0xFF2D2D2D),
-        cardBackground = Color(0xFF121212),
+        divider = Color(0xFF333333),
+        cardBackground = Color(0xFF242424),
         highlightBackground = Color(0xFF1B3D1E),  // Very dark green
         highlight = Color(0xFFE6A500),       // Gold for playing ayah
         ayahMarker = Color(0xFFCDAD00),      // Dimmed gold
-        topBarBackground = Color(0xFF121212),
-        topBarContent = Color(0xFFB0B0B0),
-        bottomBarBackground = Color(0xFF121212),
+        topBarBackground = Color(0xFF242424),
+        topBarContent = Color(0xFFCCC8C3),
+        bottomBarBackground = Color(0xFF242424),
         isDark = true
     )
 

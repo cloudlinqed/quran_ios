@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.quranmedia.player.domain.model.Reciter
+import com.quranmedia.player.presentation.theme.AppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,12 +35,6 @@ fun RecitersScreenNew(
     onBack: () -> Unit
 ) {
     val reciters by viewModel.reciters.collectAsState()
-
-    // Islamic green theme colors
-    val islamicGreen = Color(0xFF2E7D32)
-    val lightGreen = Color(0xFF66BB6A)
-    val darkGreen = Color(0xFF1B5E20)
-    val creamBackground = Color(0xFFFAF8F3)
 
     Scaffold(
         topBar = {
@@ -64,18 +59,18 @@ fun RecitersScreenNew(
                         Icon(
                             Icons.Default.ArrowBack,
                             "Back",
-                            tint = Color.White
+                            tint = AppTheme.colors.textOnHeader
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = islamicGreen,
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
+                    containerColor = AppTheme.colors.topBarBackground,
+                    titleContentColor = AppTheme.colors.textOnHeader,
+                    navigationIconContentColor = AppTheme.colors.textOnHeader
                 )
             )
         },
-        containerColor = creamBackground
+        containerColor = AppTheme.colors.screenBackground
     ) { paddingValues ->
         if (reciters.isEmpty()) {
             Box(
@@ -88,11 +83,11 @@ fun RecitersScreenNew(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    CircularProgressIndicator(color = islamicGreen)
+                    CircularProgressIndicator(color = AppTheme.colors.islamicGreen)
                     Text(
                         text = "Loading reciters...",
                         style = MaterialTheme.typography.bodyLarge,
-                        color = Color.Gray
+                        color = AppTheme.colors.textSecondary
                     )
                 }
             }
@@ -109,7 +104,7 @@ fun RecitersScreenNew(
                         .padding(16.dp),
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = lightGreen.copy(alpha = 0.2f)
+                        containerColor = AppTheme.colors.lightGreen.copy(alpha = 0.2f)
                     )
                 ) {
                     Row(
@@ -121,7 +116,7 @@ fun RecitersScreenNew(
                         Icon(
                             Icons.Default.Person,
                             contentDescription = null,
-                            tint = islamicGreen,
+                            tint = AppTheme.colors.islamicGreen,
                             modifier = Modifier.size(32.dp)
                         )
                         Spacer(modifier = Modifier.width(12.dp))
@@ -130,12 +125,12 @@ fun RecitersScreenNew(
                                 text = "${reciters.size} Reciters Available",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = darkGreen
+                                color = AppTheme.colors.darkGreen
                             )
                             Text(
                                 text = "Select a reciter to browse surahs",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color.Gray,
+                                color = AppTheme.colors.textSecondary,
                                 fontSize = 12.sp
                             )
                         }
@@ -169,16 +164,13 @@ fun ReciterItemNew(
     reciter: Reciter,
     onClick: () -> Unit
 ) {
-    val islamicGreen = Color(0xFF2E7D32)
-    val lightGreen = Color(0xFF66BB6A)
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = AppTheme.colors.cardBackground
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -193,13 +185,13 @@ fun ReciterItemNew(
                 modifier = Modifier
                     .size(56.dp)
                     .clip(CircleShape)
-                    .background(lightGreen.copy(alpha = 0.2f)),
+                    .background(AppTheme.colors.lightGreen.copy(alpha = 0.2f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     Icons.Default.Person,
                     contentDescription = null,
-                    tint = islamicGreen,
+                    tint = AppTheme.colors.islamicGreen,
                     modifier = Modifier.size(32.dp)
                 )
             }
@@ -213,14 +205,14 @@ fun ReciterItemNew(
                     style = MaterialTheme.typography.titleMedium,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color.Black
+                    color = AppTheme.colors.textPrimary
                 )
                 reciter.nameArabic?.let {
                     Text(
                         text = it,
                         style = MaterialTheme.typography.bodyMedium,
                         fontSize = 18.sp,
-                        color = islamicGreen,
+                        color = AppTheme.colors.islamicGreen,
                         lineHeight = 28.sp
                     )
                 }
@@ -229,7 +221,7 @@ fun ReciterItemNew(
                     text = reciter.style ?: "Murattal",
                     style = MaterialTheme.typography.bodySmall,
                     fontSize = 12.sp,
-                    color = Color.Gray
+                    color = AppTheme.colors.textSecondary
                 )
             }
 
@@ -237,7 +229,7 @@ fun ReciterItemNew(
             Icon(
                 imageVector = Icons.Default.ChevronRight,
                 contentDescription = null,
-                tint = Color.Gray,
+                tint = AppTheme.colors.iconDefault,
                 modifier = Modifier.size(24.dp)
             )
         }

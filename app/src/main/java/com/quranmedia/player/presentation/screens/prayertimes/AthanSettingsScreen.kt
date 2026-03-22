@@ -36,9 +36,7 @@ import com.quranmedia.player.domain.model.Athan
 import com.quranmedia.player.domain.model.CalculationMethod
 import com.quranmedia.player.domain.model.PrayerType
 import com.quranmedia.player.presentation.screens.reader.components.scheherazadeFont
-import com.quranmedia.player.presentation.screens.reader.components.islamicGreen
-import com.quranmedia.player.presentation.screens.reader.components.darkGreen
-import com.quranmedia.player.presentation.screens.reader.components.creamBackground
+import com.quranmedia.player.presentation.theme.AppTheme
 import com.quranmedia.player.presentation.util.layoutDirection
 import com.quranmedia.player.domain.util.ArabicNumeralUtils
 
@@ -120,13 +118,13 @@ fun AthanSettingsScreen(
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = islamicGreen,
-                        titleContentColor = Color.White,
-                        navigationIconContentColor = Color.White
+                        containerColor = AppTheme.colors.topBarBackground,
+                        titleContentColor = AppTheme.colors.textOnHeader,
+                        navigationIconContentColor = AppTheme.colors.textOnHeader
                     )
                 )
             },
-            containerColor = creamBackground
+            containerColor = AppTheme.colors.screenBackground
         ) { paddingValues ->
             LazyColumn(
                 modifier = Modifier
@@ -144,7 +142,7 @@ fun AthanSettingsScreen(
                                 text = if (language == AppLanguage.ARABIC) "طريقة الحساب" else "Calculation Method",
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Medium,
-                                color = darkGreen,
+                                color = AppTheme.colors.darkGreen,
                                 fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null
                             )
                             Spacer(modifier = Modifier.height(8.dp))
@@ -153,7 +151,7 @@ fun AthanSettingsScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(8.dp))
-                                        .background(Color.Gray.copy(alpha = 0.1f))
+                                        .background(AppTheme.colors.chipBackground)
                                         .clickable { expanded = true }
                                         .padding(12.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -166,12 +164,12 @@ fun AthanSettingsScreen(
                                             uiState.calculationMethod.nameEnglish,
                                         fontSize = 14.sp,
                                         fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
-                                        color = islamicGreen
+                                        color = AppTheme.colors.islamicGreen
                                     )
                                     Icon(
                                         Icons.Default.ArrowDropDown,
                                         contentDescription = null,
-                                        tint = islamicGreen
+                                        tint = AppTheme.colors.islamicGreen
                                     )
                                 }
                                 DropdownMenu(
@@ -188,7 +186,7 @@ fun AthanSettingsScreen(
                                                     fontWeight = if (method == uiState.calculationMethod)
                                                         FontWeight.Bold else FontWeight.Normal,
                                                     color = if (method == uiState.calculationMethod)
-                                                        islamicGreen else Color.Black
+                                                        AppTheme.colors.islamicGreen else AppTheme.colors.textPrimary
                                                 )
                                             },
                                             onClick = {
@@ -211,7 +209,7 @@ fun AthanSettingsScreen(
                                 text = if (language == AppLanguage.ARABIC) "حساب العصر" else "Asr Calculation",
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Medium,
-                                color = darkGreen,
+                                color = AppTheme.colors.darkGreen,
                                 fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null
                             )
                             Spacer(modifier = Modifier.height(8.dp))
@@ -233,9 +231,9 @@ fun AthanSettingsScreen(
                                             )
                                         },
                                         colors = FilterChipDefaults.filterChipColors(
-                                            selectedContainerColor = islamicGreen,
-                                            selectedLabelColor = Color.White,
-                                            containerColor = Color.Gray.copy(alpha = 0.1f)
+                                            selectedContainerColor = AppTheme.colors.islamicGreen,
+                                            selectedLabelColor = AppTheme.colors.textOnPrimary,
+                                            containerColor = AppTheme.colors.chipBackground
                                         ),
                                         modifier = Modifier.weight(1f)
                                     )
@@ -253,7 +251,7 @@ fun AthanSettingsScreen(
                                 text = if (language == AppLanguage.ARABIC) "تعديل التاريخ الهجري" else "Hijri Date Adjustment",
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Medium,
-                                color = darkGreen,
+                                color = AppTheme.colors.darkGreen,
                                 fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null
                             )
                             Spacer(modifier = Modifier.height(8.dp))
@@ -278,9 +276,9 @@ fun AthanSettingsScreen(
                                             )
                                         },
                                         colors = FilterChipDefaults.filterChipColors(
-                                            selectedContainerColor = islamicGreen,
-                                            selectedLabelColor = Color.White,
-                                            containerColor = Color.Gray.copy(alpha = 0.1f)
+                                            selectedContainerColor = AppTheme.colors.islamicGreen,
+                                            selectedLabelColor = AppTheme.colors.textOnPrimary,
+                                            containerColor = AppTheme.colors.chipBackground
                                         ),
                                         modifier = Modifier.weight(1f)
                                     )
@@ -295,7 +293,7 @@ fun AthanSettingsScreen(
                                     else
                                         "${if (uiState.hijriDateAdjustment > 0) "+" else ""}${uiState.hijriDateAdjustment} ${if (kotlin.math.abs(uiState.hijriDateAdjustment) == 1) "day" else "days"}",
                                     fontSize = 11.sp,
-                                    color = Color.Gray,
+                                    color = AppTheme.colors.textSecondary,
                                     fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                                     modifier = Modifier.padding(top = 4.dp)
                                 )
@@ -321,7 +319,7 @@ fun AthanSettingsScreen(
                                     text = if (language == AppLanguage.ARABIC) "المؤذن" else "Muezzin",
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Medium,
-                                    color = darkGreen,
+                                    color = AppTheme.colors.darkGreen,
                                     fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                                     modifier = Modifier.padding(12.dp, 10.dp, 12.dp, 6.dp)
                                 )
@@ -331,7 +329,7 @@ fun AthanSettingsScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(6.dp))
-                                        .background(Color.Gray.copy(alpha = 0.05f))
+                                        .background(AppTheme.colors.chipBackground)
                                         .clickable { showGlobalAthanSelector = true }
                                         .padding(horizontal = 12.dp, vertical = 10.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -340,7 +338,7 @@ fun AthanSettingsScreen(
                                     Text(
                                         text = uiState.getSelectedAthanName(PrayerType.FAJR) ?: (if (language == AppLanguage.ARABIC) "اختر المؤذن" else "Select Muezzin"),
                                         fontSize = 13.sp,
-                                        color = if (uiState.getSelectedAthanName(PrayerType.FAJR) != null) Color.Black else Color.Gray,
+                                        color = if (uiState.getSelectedAthanName(PrayerType.FAJR) != null) AppTheme.colors.textPrimary else AppTheme.colors.textSecondary,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis,
                                         modifier = Modifier.weight(1f)
@@ -350,7 +348,7 @@ fun AthanSettingsScreen(
                                             Icon(
                                                 Icons.Default.CheckCircle,
                                                 contentDescription = null,
-                                                tint = islamicGreen,
+                                                tint = AppTheme.colors.islamicGreen,
                                                 modifier = Modifier.size(16.dp)
                                             )
                                             Spacer(modifier = Modifier.width(6.dp))
@@ -358,7 +356,7 @@ fun AthanSettingsScreen(
                                         Icon(
                                             Icons.Default.ChevronRight,
                                             contentDescription = null,
-                                            tint = Color.Gray,
+                                            tint = AppTheme.colors.iconDefault,
                                             modifier = Modifier.size(18.dp)
                                         )
                                     }
@@ -379,13 +377,13 @@ fun AthanSettingsScreen(
                                     Text(
                                         text = if (language == AppLanguage.ARABIC) "تخصيص لكل صلاة" else "Customize per prayer",
                                         fontSize = 12.sp,
-                                        color = islamicGreen,
+                                        color = AppTheme.colors.islamicGreen,
                                         fontWeight = FontWeight.Medium
                                     )
                                     Icon(
                                         if (showPerPrayerCustomization) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                                         contentDescription = null,
-                                        tint = islamicGreen,
+                                        tint = AppTheme.colors.islamicGreen,
                                         modifier = Modifier.size(20.dp)
                                     )
                                 }
@@ -395,7 +393,7 @@ fun AthanSettingsScreen(
                                     Spacer(modifier = Modifier.height(4.dp))
                                     HorizontalDivider(
                                         modifier = Modifier.padding(horizontal = 12.dp),
-                                        color = Color.Gray.copy(alpha = 0.15f)
+                                        color = AppTheme.colors.divider
                                     )
                                     Spacer(modifier = Modifier.height(8.dp))
 
@@ -433,7 +431,7 @@ fun AthanSettingsScreen(
                                 text = if (language == AppLanguage.ARABIC) "إعدادات كل صلاة" else "Prayer Notifications",
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Medium,
-                                color = darkGreen,
+                                color = AppTheme.colors.darkGreen,
                                 fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                                 modifier = Modifier.padding(12.dp, 10.dp, 12.dp, 6.dp)
                             )
@@ -448,7 +446,7 @@ fun AthanSettingsScreen(
                                 if (index > 0) {
                                     HorizontalDivider(
                                         modifier = Modifier.padding(horizontal = 12.dp),
-                                        color = Color.Gray.copy(alpha = 0.15f)
+                                        color = AppTheme.colors.divider
                                     )
                                 }
                                 CompactPrayerRow(
@@ -495,7 +493,7 @@ fun AthanSettingsScreen(
                                     text = if (language == AppLanguage.ARABIC) "توقيت التنبيه" else "Notify Before",
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Medium,
-                                    color = darkGreen,
+                                    color = AppTheme.colors.darkGreen,
                                     fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
@@ -520,9 +518,9 @@ fun AthanSettingsScreen(
                                                 )
                                             },
                                             colors = FilterChipDefaults.filterChipColors(
-                                                selectedContainerColor = islamicGreen,
-                                                selectedLabelColor = Color.White,
-                                                containerColor = Color.Gray.copy(alpha = 0.1f)
+                                                selectedContainerColor = AppTheme.colors.islamicGreen,
+                                                selectedLabelColor = AppTheme.colors.textOnPrimary,
+                                                containerColor = AppTheme.colors.chipBackground
                                             ),
                                             modifier = Modifier.weight(1f)
                                         )
@@ -542,9 +540,21 @@ fun AthanSettingsScreen(
                                     text = if (language == AppLanguage.ARABIC) "خيارات الأذان" else "Athan Options",
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Medium,
-                                    color = darkGreen,
+                                    color = AppTheme.colors.darkGreen,
                                     fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                                     modifier = Modifier.padding(12.dp, 10.dp, 12.dp, 4.dp)
+                                )
+
+                                CompactToggleRow(
+                                    title = if (language == AppLanguage.ARABIC) "حتى في الوضع الصامت" else "Even in Silent Mode",
+                                    checked = uiState.athanInSilentMode,
+                                    onCheckedChange = { viewModel.setAthanInSilentMode(it) },
+                                    language = language
+                                )
+
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(horizontal = 12.dp),
+                                    color = AppTheme.colors.divider
                                 )
 
                                 CompactToggleRow(
@@ -556,7 +566,7 @@ fun AthanSettingsScreen(
 
                                 HorizontalDivider(
                                     modifier = Modifier.padding(horizontal = 12.dp),
-                                    color = Color.Gray.copy(alpha = 0.15f)
+                                    color = AppTheme.colors.divider
                                 )
 
                                 CompactToggleRow(
@@ -579,7 +589,7 @@ fun AthanSettingsScreen(
                                     text = if (language == AppLanguage.ARABIC) "خيارات الإشعار" else "Notification Options",
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Medium,
-                                    color = darkGreen,
+                                    color = AppTheme.colors.darkGreen,
                                     fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                                     modifier = Modifier.padding(12.dp, 10.dp, 12.dp, 4.dp)
                                 )
@@ -593,7 +603,7 @@ fun AthanSettingsScreen(
 
                                 HorizontalDivider(
                                     modifier = Modifier.padding(horizontal = 12.dp),
-                                    color = Color.Gray.copy(alpha = 0.15f)
+                                    color = AppTheme.colors.divider
                                 )
 
                                 CompactToggleRow(
@@ -616,7 +626,7 @@ fun AthanSettingsScreen(
                                     text = if (language == AppLanguage.ARABIC) "الأذانات المحملة" else "Downloaded",
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Medium,
-                                    color = darkGreen,
+                                    color = AppTheme.colors.darkGreen,
                                     fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                                     modifier = Modifier.padding(12.dp, 10.dp, 12.dp, 4.dp)
                                 )
@@ -625,7 +635,7 @@ fun AthanSettingsScreen(
                                     if (index > 0) {
                                         HorizontalDivider(
                                             modifier = Modifier.padding(horizontal = 12.dp),
-                                            color = Color.Gray.copy(alpha = 0.15f)
+                                            color = AppTheme.colors.divider
                                         )
                                     }
                                     CompactDownloadedAthanRow(
@@ -694,7 +704,7 @@ fun AthanSettingsScreen(
 private fun CompactCard(content: @Composable () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = AppTheme.colors.cardBackground),
         shape = RoundedCornerShape(10.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
@@ -729,7 +739,7 @@ private fun CompactPrayerRow(
                 text = prayerName,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
-                color = darkGreen,
+                color = AppTheme.colors.darkGreen,
                 fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                 modifier = Modifier.width(70.dp)
             )
@@ -742,7 +752,7 @@ private fun CompactPrayerRow(
                         modifier = Modifier
                             .clip(RoundedCornerShape(6.dp))
                             .clickable { onModeChange(notificationMode) },
-                        color = if (isSelected) islamicGreen else Color.Gray.copy(alpha = 0.1f),
+                        color = if (isSelected) AppTheme.colors.islamicGreen else AppTheme.colors.chipBackground,
                         shape = RoundedCornerShape(6.dp)
                     ) {
                         Text(
@@ -752,7 +762,7 @@ private fun CompactPrayerRow(
                                 PrayerNotificationMode.SILENT -> if (language == AppLanguage.ARABIC) "صامت" else "Off"
                             },
                             fontSize = 10.sp,
-                            color = if (isSelected) Color.White else Color.Gray,
+                            color = if (isSelected) AppTheme.colors.textOnPrimary else AppTheme.colors.textSecondary,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                         )
                     }
@@ -767,7 +777,7 @@ private fun CompactPrayerRow(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(6.dp))
-                    .background(Color.Gray.copy(alpha = 0.05f))
+                    .background(AppTheme.colors.chipBackground)
                     .clickable { onSelectAthan() }
                     .padding(horizontal = 10.dp, vertical = 6.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -776,7 +786,7 @@ private fun CompactPrayerRow(
                 Text(
                     text = selectedAthanName ?: (if (language == AppLanguage.ARABIC) "اختر المؤذن" else "Select Muezzin"),
                     fontSize = 12.sp,
-                    color = if (selectedAthanName != null) Color.Black else Color.Gray,
+                    color = if (selectedAthanName != null) AppTheme.colors.textPrimary else AppTheme.colors.textSecondary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
@@ -786,7 +796,7 @@ private fun CompactPrayerRow(
                         Icon(
                             Icons.Default.CheckCircle,
                             contentDescription = null,
-                            tint = islamicGreen,
+                            tint = AppTheme.colors.islamicGreen,
                             modifier = Modifier.size(14.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
@@ -794,7 +804,7 @@ private fun CompactPrayerRow(
                     Icon(
                         Icons.Default.ChevronRight,
                         contentDescription = null,
-                        tint = Color.Gray,
+                        tint = AppTheme.colors.iconDefault,
                         modifier = Modifier.size(16.dp)
                     )
                 }
@@ -825,7 +835,7 @@ private fun PerPrayerAthanSelector(
             text = prayerName,
             fontSize = 12.sp,
             fontWeight = FontWeight.Medium,
-            color = darkGreen,
+            color = AppTheme.colors.darkGreen,
             fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
             modifier = Modifier.width(60.dp)
         )
@@ -835,7 +845,7 @@ private fun PerPrayerAthanSelector(
             modifier = Modifier
                 .weight(1f)
                 .clip(RoundedCornerShape(6.dp))
-                .background(Color.Gray.copy(alpha = 0.05f))
+                .background(AppTheme.colors.chipBackground)
                 .clickable { onSelectAthan() }
                 .padding(horizontal = 8.dp, vertical = 6.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -844,7 +854,7 @@ private fun PerPrayerAthanSelector(
             Text(
                 text = selectedAthanName ?: (if (language == AppLanguage.ARABIC) "اختر المؤذن" else "Select"),
                 fontSize = 11.sp,
-                color = if (selectedAthanName != null) Color.Black else Color.Gray,
+                color = if (selectedAthanName != null) AppTheme.colors.textPrimary else AppTheme.colors.textSecondary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f)
@@ -854,7 +864,7 @@ private fun PerPrayerAthanSelector(
                     Icon(
                         Icons.Default.CheckCircle,
                         contentDescription = null,
-                        tint = islamicGreen,
+                        tint = AppTheme.colors.islamicGreen,
                         modifier = Modifier.size(12.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
@@ -862,7 +872,7 @@ private fun PerPrayerAthanSelector(
                 Icon(
                     Icons.Default.ChevronRight,
                     contentDescription = null,
-                    tint = Color.Gray,
+                    tint = AppTheme.colors.iconDefault,
                     modifier = Modifier.size(14.dp)
                 )
             }
@@ -895,8 +905,8 @@ private fun CompactToggleRow(
             onCheckedChange = onCheckedChange,
             modifier = Modifier.height(24.dp),
             colors = SwitchDefaults.colors(
-                checkedThumbColor = Color.White,
-                checkedTrackColor = islamicGreen
+                checkedThumbColor = AppTheme.colors.textOnPrimary,
+                checkedTrackColor = AppTheme.colors.islamicGreen
             )
         )
     }
@@ -932,7 +942,7 @@ private fun CompactDownloadedAthanRow(
                 Icon(
                     imageVector = if (isPlaying) Icons.Default.Stop else Icons.Default.PlayArrow,
                     contentDescription = null,
-                    tint = islamicGreen,
+                    tint = AppTheme.colors.islamicGreen,
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -974,7 +984,7 @@ private fun CompactAthanSelectionDialog(
             onStopPreview()
             onDismiss()
         },
-        containerColor = Color.White,
+        containerColor = AppTheme.colors.cardBackground,
         shape = RoundedCornerShape(12.dp),
         title = {
             Text(
@@ -982,7 +992,7 @@ private fun CompactAthanSelectionDialog(
                 fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
-                color = darkGreen
+                color = AppTheme.colors.darkGreen
             )
         },
         text = {
@@ -993,7 +1003,7 @@ private fun CompactAthanSelectionDialog(
                         .height(150.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = islamicGreen, modifier = Modifier.size(32.dp))
+                    CircularProgressIndicator(color = AppTheme.colors.islamicGreen, modifier = Modifier.size(32.dp))
                 }
             } else {
                 LazyColumn(
@@ -1035,7 +1045,7 @@ private fun CompactAthanSelectionDialog(
             }) {
                 Text(
                     text = if (language == AppLanguage.ARABIC) "إغلاق" else "Close",
-                    color = islamicGreen,
+                    color = AppTheme.colors.islamicGreen,
                     fontSize = 13.sp
                 )
             }
@@ -1059,7 +1069,7 @@ private fun CompactAthanListItem(
             .fillMaxWidth()
             .clip(RoundedCornerShape(6.dp))
             .clickable(enabled = !isDownloading) { onSelect() },
-        color = if (isSelected) lightGreen else Color.Gray.copy(alpha = 0.05f),
+        color = if (isSelected) lightGreen else AppTheme.colors.chipBackground,
         shape = RoundedCornerShape(6.dp)
     ) {
         Row(
@@ -1074,14 +1084,14 @@ private fun CompactAthanListItem(
                     text = athan.name,
                     fontSize = 13.sp,
                     fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,
-                    color = if (isSelected) darkGreen else Color.Black,
+                    color = if (isSelected) AppTheme.colors.darkGreen else AppTheme.colors.textPrimary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = athan.location,
                     fontSize = 10.sp,
-                    color = Color.Gray,
+                    color = AppTheme.colors.textSecondary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -1099,7 +1109,7 @@ private fun CompactAthanListItem(
                     Icon(
                         imageVector = if (isPreviewing) Icons.Default.Stop else Icons.Default.PlayArrow,
                         contentDescription = null,
-                        tint = islamicGreen,
+                        tint = AppTheme.colors.islamicGreen,
                         modifier = Modifier.size(16.dp)
                     )
                 }
@@ -1109,7 +1119,7 @@ private fun CompactAthanListItem(
                     isDownloading -> {
                         CircularProgressIndicator(
                             modifier = Modifier.size(16.dp),
-                            color = islamicGreen,
+                            color = AppTheme.colors.islamicGreen,
                             strokeWidth = 2.dp
                         )
                     }
@@ -1117,7 +1127,7 @@ private fun CompactAthanListItem(
                         Icon(
                             Icons.Default.CheckCircle,
                             contentDescription = null,
-                            tint = islamicGreen,
+                            tint = AppTheme.colors.islamicGreen,
                             modifier = Modifier.size(16.dp)
                         )
                     }
@@ -1129,7 +1139,7 @@ private fun CompactAthanListItem(
                             Icon(
                                 Icons.Default.Download,
                                 contentDescription = null,
-                                tint = Color.Gray,
+                                tint = AppTheme.colors.iconDefault,
                                 modifier = Modifier.size(16.dp)
                             )
                         }
@@ -1140,7 +1150,7 @@ private fun CompactAthanListItem(
                     Icon(
                         Icons.Default.Check,
                         contentDescription = null,
-                        tint = darkGreen,
+                        tint = AppTheme.colors.darkGreen,
                         modifier = Modifier.size(16.dp)
                     )
                 }

@@ -5,10 +5,8 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -25,10 +23,14 @@ import com.quranmedia.player.domain.model.PrayerType
 import com.quranmedia.player.media.player.AthanPlayer
 import com.quranmedia.player.presentation.MainActivity
 import dagger.hilt.android.AndroidEntryPoint
+import android.media.AudioManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -64,29 +66,9 @@ class AthanService : Service() {
     private var hasInitialReading = false  // Track if we've received initial sensor reading
     private var flipDetectionEnabled = false  // Track if flip detection is active
 
-    // Volume change receiver - catches any volume button press
-    private val volumeChangeReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action == "android.media.VOLUME_CHANGED_ACTION") {
-                if (isPlayingAthan && athanPlayer.isPlaying()) {
-                    Timber.d("Volume button pressed - stopping athan")
-                    stopAthanPlayback()
-                }
-            }
-        }
-    }
-
-    // Screen off receiver - catches power button press
-    private val screenOffReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action == Intent.ACTION_SCREEN_OFF) {
-                if (isPlayingAthan && athanPlayer.isPlaying()) {
-                    Timber.d("Power button pressed (screen off) - stopping athan")
-                    stopAthanPlayback()
-                }
-            }
-        }
-    }
+    // Volume polling for button dismissal
+    private var volumePollingJob: Job? = null
+    private var initialVolume: Int = -1
 
     // Main handler for delayed flip detection enabling
     private val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
@@ -162,7 +144,7 @@ class AthanService : Service() {
     }
 
     companion object {
-        const val CHANNEL_ID = "athan_playback_channel"
+        const val CHANNEL_ID = "athan_playback_channel_v2"
         const val NOTIFICATION_ID = 3000
 
         const val ACTION_PLAY = "com.quranmedia.player.ACTION_PLAY_ATHAN"
@@ -195,15 +177,21 @@ class AthanService : Service() {
          * Start the Athan service to play athan
          */
         fun startAthan(context: Context, athanId: String, prayerType: PrayerType) {
-            val intent = Intent(context, AthanService::class.java).apply {
-                action = ACTION_PLAY
-                putExtra(EXTRA_ATHAN_ID, athanId)
-                putExtra(EXTRA_PRAYER_TYPE, prayerType.name)
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent)
-            } else {
-                context.startService(intent)
+            try {
+                val intent = Intent(context, AthanService::class.java).apply {
+                    action = ACTION_PLAY
+                    putExtra(EXTRA_ATHAN_ID, athanId)
+                    putExtra(EXTRA_PRAYER_TYPE, prayerType.name)
+                }
+                Timber.d("Starting AthanService for $prayerType (athanId=$athanId)")
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.startForegroundService(intent)
+                } else {
+                    context.startService(intent)
+                }
+                Timber.d("AthanService start request sent successfully")
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to start AthanService for $prayerType")
             }
         }
 
@@ -271,7 +259,7 @@ class AthanService : Service() {
         val settings = settingsRepository.getCurrentSettings()
         isFlipToSilenceEnabled = settings.flipToSilenceAthan
 
-        // Register sensors for flip-to-silence
+        // Register sensors for flip-to-silence only if enabled
         if (isFlipToSilenceEnabled) {
             registerFlipToSilence()
         }
@@ -292,73 +280,85 @@ class AthanService : Service() {
                 ) {
                     // On completion, stop the service
                     Timber.d("Athan playback completed")
-                    isPlayingAthan = false
-                    unregisterFlipToSilence()
-                    stopSelf()
+                    stopAthanPlayback()
                 }
+                // Start volume polling AFTER playback has started and volume has been maximized
+                startVolumePolling()
             } else {
                 // Athan not downloaded - should not happen, but fallback to just notification
                 Timber.e("Athan $athanId not downloaded! Cannot play.")
                 // Keep notification visible for a few seconds then stop
                 kotlinx.coroutines.delay(3000)
-                isPlayingAthan = false
-                unregisterFlipToSilence()
-                stopSelf()
+                stopAthanPlayback()
             }
         }
     }
 
+    /**
+     * Start polling the audio stream volume every 300ms.
+     * If the user presses volume up/down, the stream volume changes and we stop the athan.
+     * Records the baseline volume AFTER a grace period so the maximize has already happened.
+     */
+    private fun startVolumePolling() {
+        val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        val settings = settingsRepository.getCurrentSettings()
+        val stream = if (settings.athanMaxVolume) AudioManager.STREAM_ALARM else AudioManager.STREAM_NOTIFICATION
+
+        volumePollingJob = serviceScope.launch {
+            // Grace period: let volume maximize settle before recording baseline
+            delay(1500)
+            // Record baseline AFTER maximize has occurred
+            initialVolume = audioManager.getStreamVolume(stream)
+            Timber.d("Volume polling started on stream $stream (baseline=$initialVolume)")
+            while (isActive) {
+                delay(300)
+                val currentVolume = audioManager.getStreamVolume(stream)
+                if (currentVolume != initialVolume) {
+                    Timber.d("Volume changed ($initialVolume -> $currentVolume) on stream $stream - stopping athan")
+                    stopAthanPlayback()
+                    break
+                }
+            }
+        }
+    }
+
+    private fun stopVolumePolling() {
+        volumePollingJob?.cancel()
+        volumePollingJob = null
+        Timber.d("Volume polling stopped")
+    }
+
     private fun registerFlipToSilence() {
-        // Prevent multiple registrations
         if (sensorsRegistered) {
             Timber.d("Flip-to-silence sensors already registered, skipping")
             return
         }
 
-        // Reset state for new registration
         lastZ = 0f
         hasInitialReading = false
         flipDetectionEnabled = false
 
         try {
-            // Register accelerometer for flip detection
             if (accelerometer == null) {
                 Timber.w("Accelerometer sensor not available")
             } else {
                 val registered = sensorManager?.registerListener(
                     sensorListener,
                     accelerometer,
-                    SensorManager.SENSOR_DELAY_FASTEST  // Fastest for immediate flip detection
+                    SensorManager.SENSOR_DELAY_NORMAL
                 )
                 Timber.d("Accelerometer registered: $registered")
             }
 
-            // Register proximity sensor
             if (proximitySensor == null) {
                 Timber.w("Proximity sensor not available")
             } else {
                 val registered = sensorManager?.registerListener(
                     sensorListener,
                     proximitySensor,
-                    SensorManager.SENSOR_DELAY_FASTEST
+                    SensorManager.SENSOR_DELAY_NORMAL
                 )
                 Timber.d("Proximity sensor registered: $registered")
-            }
-
-            // Register volume change receiver
-            val volumeFilter = IntentFilter("android.media.VOLUME_CHANGED_ACTION")
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                registerReceiver(volumeChangeReceiver, volumeFilter, Context.RECEIVER_EXPORTED)
-            } else {
-                registerReceiver(volumeChangeReceiver, volumeFilter)
-            }
-
-            // Register screen off receiver (power button)
-            val screenFilter = IntentFilter(Intent.ACTION_SCREEN_OFF)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                registerReceiver(screenOffReceiver, screenFilter, Context.RECEIVER_NOT_EXPORTED)
-            } else {
-                registerReceiver(screenOffReceiver, screenFilter)
             }
 
             sensorsRegistered = true
@@ -369,27 +369,11 @@ class AthanService : Service() {
     }
 
     private fun unregisterFlipToSilence() {
-        // Only unregister if currently registered
-        if (!sensorsRegistered) {
-            Timber.d("Flip-to-silence sensors not registered, skipping unregister")
-            return
-        }
+        if (!sensorsRegistered) return
 
         try {
-            // Remove any pending callbacks
             mainHandler.removeCallbacksAndMessages(null)
-
             sensorManager?.unregisterListener(sensorListener)
-            try {
-                unregisterReceiver(volumeChangeReceiver)
-            } catch (e: IllegalArgumentException) {
-                // Receiver not registered
-            }
-            try {
-                unregisterReceiver(screenOffReceiver)
-            } catch (e: IllegalArgumentException) {
-                // Receiver not registered
-            }
             sensorsRegistered = false
             hasInitialReading = false
             flipDetectionEnabled = false
@@ -402,6 +386,7 @@ class AthanService : Service() {
     private fun stopAthanPlayback() {
         Timber.d("Stopping athan playback")
         isPlayingAthan = false
+        stopVolumePolling()
         unregisterFlipToSilence()
         athanPlayer.stop()
         stopForeground(STOP_FOREGROUND_REMOVE)
@@ -446,8 +431,8 @@ class AthanService : Service() {
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(title)
             .setContentText(message)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .setCategory(NotificationCompat.CATEGORY_SERVICE)
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setContentIntent(stopPendingIntent)  // Tap to stop athan
             .setDeleteIntent(stopPendingIntent)    // Swipe to stop athan
@@ -465,7 +450,7 @@ class AthanService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val name = "Athan Playback"
             val descriptionText = "Shows while Athan is playing"
-            val importance = NotificationManager.IMPORTANCE_LOW  // Normal notification, no sound/vibration from channel
+            val importance = NotificationManager.IMPORTANCE_HIGH
             val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
                 description = descriptionText
                 setShowBadge(false)
@@ -483,6 +468,7 @@ class AthanService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        stopVolumePolling()
         unregisterFlipToSilence()
         serviceScope.cancel()
         athanPlayer.stop()

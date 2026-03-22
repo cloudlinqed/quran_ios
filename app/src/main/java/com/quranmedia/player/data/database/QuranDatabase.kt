@@ -16,6 +16,7 @@ import com.quranmedia.player.data.database.dao.SurahDao
 import com.quranmedia.player.data.database.dao.DailyActivityDao
 import com.quranmedia.player.data.database.dao.QuranProgressDao
 import com.quranmedia.player.data.database.dao.KhatmahGoalDao
+import com.quranmedia.player.data.database.dao.HadithDao
 import com.quranmedia.player.data.database.dao.TafseerDao
 import com.quranmedia.player.data.database.entity.AthkarCategoryEntity
 import com.quranmedia.player.data.database.entity.AyahEntity
@@ -34,6 +35,9 @@ import com.quranmedia.player.data.database.entity.DailyActivityEntity
 import com.quranmedia.player.data.database.entity.QuranProgressEntity
 import com.quranmedia.player.data.database.entity.KhatmahGoalEntity
 import com.quranmedia.player.data.database.entity.TafseerDownloadEntity
+import com.quranmedia.player.data.database.entity.HadithBookEntity
+import com.quranmedia.player.data.database.entity.HadithChapterEntity
+import com.quranmedia.player.data.database.entity.HadithEntity
 import com.quranmedia.player.data.database.entity.TafseerContentEntity
 
 @Database(
@@ -60,9 +64,13 @@ import com.quranmedia.player.data.database.entity.TafseerContentEntity
         KhatmahGoalEntity::class,
         // Tafseer entities
         TafseerDownloadEntity::class,
-        TafseerContentEntity::class
+        TafseerContentEntity::class,
+        // Hadith entities
+        HadithBookEntity::class,
+        HadithChapterEntity::class,
+        HadithEntity::class
     ],
-    version = 9,  // Incremented for Prayer Times offline caching improvements
+    version = 11,  // Ayah-level bookmarks
     exportSchema = true
 )
 abstract class QuranDatabase : RoomDatabase() {
@@ -81,4 +89,5 @@ abstract class QuranDatabase : RoomDatabase() {
     abstract fun quranProgressDao(): QuranProgressDao
     abstract fun khatmahGoalDao(): KhatmahGoalDao
     abstract fun tafseerDao(): TafseerDao
+    abstract fun hadithDao(): HadithDao
 }

@@ -17,6 +17,7 @@ import com.quranmedia.player.presentation.screens.home.HomeScreenNew
 import com.quranmedia.player.presentation.screens.player.PlayerScreenNew
 import com.quranmedia.player.presentation.screens.prayertimes.AthanSettingsScreen
 import com.quranmedia.player.presentation.screens.prayertimes.PrayerTimesScreen
+import com.quranmedia.player.presentation.screens.qibla.QiblaScreen
 import com.quranmedia.player.presentation.screens.reader.QuranIndexScreen
 import com.quranmedia.player.presentation.screens.reader.QuranReaderScreen
 import com.quranmedia.player.presentation.screens.reciters.RecitersScreenNew
@@ -27,8 +28,34 @@ import com.quranmedia.player.presentation.screens.surahs.SurahsScreenNew
 import com.quranmedia.player.presentation.screens.onboarding.OnboardingScreen
 import com.quranmedia.player.presentation.screens.tracker.TrackerScreen
 import com.quranmedia.player.presentation.screens.imsakiya.ImskaiyaScreen
+import com.quranmedia.player.presentation.screens.hadith.HadithLibraryScreen
+import com.quranmedia.player.presentation.screens.hadith.HadithBookScreen
+import com.quranmedia.player.presentation.screens.hadith.HadithReaderScreen
+import com.quranmedia.player.presentation.screens.hadith.HadithSearchScreen
 import com.quranmedia.player.recite.presentation.ReciteMushafScreen
 import com.quranmedia.player.recite.presentation.ReciteStreamingScreen
+
+// Helper to navigate by route string from bottom nav bar
+private fun navigateByRoute(navController: NavHostController, route: String, onToggleDarkMode: () -> Unit = {}) {
+    if (route == "toggleDarkMode") { onToggleDarkMode(); return }
+    val target = when (route) {
+        "home" -> Screen.Home.route
+        "quranIndex" -> Screen.QuranIndex.route
+        "prayerTimes" -> Screen.PrayerTimes.route
+        "athkarCategories" -> Screen.AthkarCategories.route
+        "hadithLibrary" -> Screen.HadithLibrary.route
+        "tracker" -> Screen.Tracker.route
+        "bookmarks" -> Screen.Bookmarks.route
+        "downloads" -> Screen.Downloads.route
+        "qibla" -> Screen.Qibla.route
+        "settings" -> Screen.Settings.route
+        "about" -> Screen.About.route
+        else -> route
+    }
+    navController.navigate(target) {
+        launchSingleTop = true
+    }
+}
 
 // Helper to navigate to Home clearing back stack
 private fun NavHostController.navigateToHome() {
@@ -49,7 +76,8 @@ private fun NavHostController.navigateToIndex() {
 @Composable
 fun QuranNavGraph(
     navController: NavHostController,
-    shouldShowOnboarding: Boolean = false
+    shouldShowOnboarding: Boolean = false,
+    onToggleDarkMode: () -> Unit = {}
 ) {
     NavHost(
         navController = navController,
@@ -88,7 +116,9 @@ fun QuranNavGraph(
                 onNavigateToPrayerTimes = { navController.navigate(Screen.PrayerTimes.route) },
                 onNavigateToTracker = { navController.navigate(Screen.Tracker.route) },
                 onNavigateToRecite = { navController.navigate(Screen.ReciteIndex.route) },
-                onNavigateToImsakiya = { navController.navigate(Screen.Imsakiya.route) }
+                onNavigateToImsakiya = { navController.navigate(Screen.Imsakiya.route) },
+                onNavigateToHadith = { navController.navigate(Screen.HadithLibrary.route) },
+                onNavigateByRoute = { route -> navigateByRoute(navController, route, onToggleDarkMode) }
             )
         }
 
@@ -158,12 +188,16 @@ fun QuranNavGraph(
                 // 3-dot menu navigation - pop back to home first so back button goes to home
                 onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
                 onNavigateToPrayerTimes = { navController.navigate(Screen.PrayerTimes.route) { popUpTo(Screen.Home.route) } },
+                onNavigateToQibla = { navController.navigate(Screen.Qibla.route) },
                 onNavigateToAthkar = { navController.navigate(Screen.AthkarCategories.route) { popUpTo(Screen.Home.route) } },
                 onNavigateToTracker = { navController.navigate(Screen.Tracker.route) { popUpTo(Screen.Home.route) } },
                 onNavigateToDownloads = { navController.navigate(Screen.Downloads.route) { popUpTo(Screen.Home.route) } },
                 onNavigateToAbout = { navController.navigate(Screen.About.route) { popUpTo(Screen.Home.route) } },
                 onNavigateToReading = { navController.navigate(Screen.QuranIndex.route) { popUpTo(Screen.Home.route) } },
-                onNavigateToImsakiya = { navController.navigate(Screen.Imsakiya.route) }
+                onNavigateToImsakiya = { navController.navigate(Screen.Imsakiya.route) },
+                onNavigateToHadith = { navController.navigate(Screen.HadithLibrary.route) { popUpTo(Screen.Home.route) } },
+                onToggleDarkMode = onToggleDarkMode,
+                onNavigateByRoute = { route -> navigateByRoute(navController, route, onToggleDarkMode) }
             )
         }
 
@@ -185,7 +219,9 @@ fun QuranNavGraph(
         composable(Screen.About.route) {
             BackHandler { navController.navigateToHome() }
             AboutScreen(
-                onNavigateBack = { navController.navigateToHome() }
+                onNavigateBack = { navController.navigateToHome() },
+                onToggleDarkMode = onToggleDarkMode,
+                onNavigateByRoute = { route -> navigateByRoute(navController, route, onToggleDarkMode) }
             )
         }
 
@@ -217,11 +253,15 @@ fun QuranNavGraph(
                 // 3-dot menu navigation - pop back to home first so back button goes to home
                 onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
                 onNavigateToPrayerTimes = { navController.navigate(Screen.PrayerTimes.route) { popUpTo(Screen.Home.route) } },
+                onNavigateToQibla = { navController.navigate(Screen.Qibla.route) },
                 onNavigateToAthkar = { navController.navigate(Screen.AthkarCategories.route) { popUpTo(Screen.Home.route) } },
                 onNavigateToTracker = { navController.navigate(Screen.Tracker.route) { popUpTo(Screen.Home.route) } },
                 onNavigateToAbout = { navController.navigate(Screen.About.route) { popUpTo(Screen.Home.route) } },
                 onNavigateToReading = { navController.navigate(Screen.QuranIndex.route) { popUpTo(Screen.Home.route) } },
-                onNavigateToImsakiya = { navController.navigate(Screen.Imsakiya.route) }
+                onNavigateToImsakiya = { navController.navigate(Screen.Imsakiya.route) },
+                onNavigateToHadith = { navController.navigate(Screen.HadithLibrary.route) { popUpTo(Screen.Home.route) } },
+                onToggleDarkMode = onToggleDarkMode,
+                onNavigateByRoute = { route -> navigateByRoute(navController, route, onToggleDarkMode) }
             )
         }
 
@@ -290,7 +330,11 @@ fun QuranNavGraph(
                 },
                 onNavigateToImsakiya = {
                     navController.navigate(Screen.Imsakiya.route)
-                }
+                },
+                onNavigateToHadith = {
+                    navController.navigate(Screen.HadithLibrary.route)
+                },
+                onToggleDarkMode = onToggleDarkMode
             )
         }
 
@@ -313,11 +357,15 @@ fun QuranNavGraph(
                 // 3-dot menu navigation - pop back to home first so back button goes to home
                 onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
                 onNavigateToPrayerTimes = { navController.navigate(Screen.PrayerTimes.route) { popUpTo(Screen.Home.route) } },
+                onNavigateToQibla = { navController.navigate(Screen.Qibla.route) },
                 onNavigateToAthkar = { navController.navigate(Screen.AthkarCategories.route) { popUpTo(Screen.Home.route) } },
                 onNavigateToTracker = { navController.navigate(Screen.Tracker.route) { popUpTo(Screen.Home.route) } },
                 onNavigateToDownloads = { navController.navigate(Screen.Downloads.route) { popUpTo(Screen.Home.route) } },
                 onNavigateToAbout = { navController.navigate(Screen.About.route) { popUpTo(Screen.Home.route) } },
-                onNavigateToImsakiya = { navController.navigate(Screen.Imsakiya.route) }
+                onNavigateToImsakiya = { navController.navigate(Screen.Imsakiya.route) },
+                onNavigateToHadith = { navController.navigate(Screen.HadithLibrary.route) { popUpTo(Screen.Home.route) } },
+                onToggleDarkMode = onToggleDarkMode,
+                onNavigateByRoute = { route -> navigateByRoute(navController, route, onToggleDarkMode) }
             )
         }
 
@@ -332,11 +380,15 @@ fun QuranNavGraph(
                 // 3-dot menu navigation - pop back to home first so back button goes to home
                 onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
                 onNavigateToPrayerTimes = { navController.navigate(Screen.PrayerTimes.route) { popUpTo(Screen.Home.route) } },
+                onNavigateToQibla = { navController.navigate(Screen.Qibla.route) },
                 onNavigateToTracker = { navController.navigate(Screen.Tracker.route) { popUpTo(Screen.Home.route) } },
                 onNavigateToDownloads = { navController.navigate(Screen.Downloads.route) { popUpTo(Screen.Home.route) } },
                 onNavigateToAbout = { navController.navigate(Screen.About.route) { popUpTo(Screen.Home.route) } },
                 onNavigateToReading = { navController.navigate(Screen.QuranIndex.route) { popUpTo(Screen.Home.route) } },
-                onNavigateToImsakiya = { navController.navigate(Screen.Imsakiya.route) }
+                onNavigateToImsakiya = { navController.navigate(Screen.Imsakiya.route) },
+                onNavigateToHadith = { navController.navigate(Screen.HadithLibrary.route) { popUpTo(Screen.Home.route) } },
+                onToggleDarkMode = onToggleDarkMode,
+                onNavigateByRoute = { route -> navigateByRoute(navController, route, onToggleDarkMode) }
             )
         }
 
@@ -354,11 +406,15 @@ fun QuranNavGraph(
                 // 3-dot menu navigation - pop back to home first so back button goes to home
                 onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
                 onNavigateToPrayerTimes = { navController.navigate(Screen.PrayerTimes.route) { popUpTo(Screen.Home.route) } },
+                onNavigateToQibla = { navController.navigate(Screen.Qibla.route) },
                 onNavigateToTracker = { navController.navigate(Screen.Tracker.route) { popUpTo(Screen.Home.route) } },
                 onNavigateToDownloads = { navController.navigate(Screen.Downloads.route) { popUpTo(Screen.Home.route) } },
                 onNavigateToAbout = { navController.navigate(Screen.About.route) { popUpTo(Screen.Home.route) } },
                 onNavigateToReading = { navController.navigate(Screen.QuranIndex.route) { popUpTo(Screen.Home.route) } },
-                onNavigateToImsakiya = { navController.navigate(Screen.Imsakiya.route) }
+                onNavigateToImsakiya = { navController.navigate(Screen.Imsakiya.route) },
+                onNavigateToHadith = { navController.navigate(Screen.HadithLibrary.route) { popUpTo(Screen.Home.route) } },
+                onToggleDarkMode = onToggleDarkMode,
+                onNavigateByRoute = { route -> navigateByRoute(navController, route, onToggleDarkMode) }
             )
         }
 
@@ -370,12 +426,16 @@ fun QuranNavGraph(
                 onNavigateToAthanSettings = { navController.navigate(Screen.AthanSettings.route) },
                 // 3-dot menu navigation - open Settings with Prayer tab selected
                 onNavigateToSettings = { navController.navigate(Screen.Settings.createRoute("prayer")) },
+                onNavigateToQibla = { navController.navigate(Screen.Qibla.route) },
                 onNavigateToAthkar = { navController.navigate(Screen.AthkarCategories.route) { popUpTo(Screen.Home.route) } },
                 onNavigateToTracker = { navController.navigate(Screen.Tracker.route) { popUpTo(Screen.Home.route) } },
                 onNavigateToDownloads = { navController.navigate(Screen.Downloads.route) { popUpTo(Screen.Home.route) } },
                 onNavigateToAbout = { navController.navigate(Screen.About.route) { popUpTo(Screen.Home.route) } },
                 onNavigateToReading = { navController.navigate(Screen.QuranIndex.route) { popUpTo(Screen.Home.route) } },
-                onNavigateToImsakiya = { navController.navigate(Screen.Imsakiya.route) }
+                onNavigateToImsakiya = { navController.navigate(Screen.Imsakiya.route) },
+                onNavigateToHadith = { navController.navigate(Screen.HadithLibrary.route) { popUpTo(Screen.Home.route) } },
+                onToggleDarkMode = onToggleDarkMode,
+                onNavigateByRoute = { route -> navigateByRoute(navController, route, onToggleDarkMode) }
             )
         }
 
@@ -387,6 +447,16 @@ fun QuranNavGraph(
             )
         }
 
+        // Qibla Direction screen
+        composable(Screen.Qibla.route) {
+            BackHandler { navController.navigateToHome() }
+            QiblaScreen(
+                onNavigateBack = { navController.navigateToHome() },
+                onToggleDarkMode = onToggleDarkMode,
+                onNavigateByRoute = { route -> navigateByRoute(navController, route, onToggleDarkMode) }
+            )
+        }
+
         // Daily Tracker screen
         composable(Screen.Tracker.route) {
             BackHandler { navController.navigateToHome() }
@@ -395,11 +465,15 @@ fun QuranNavGraph(
                 // 3-dot menu navigation - pop back to home first so back button goes to home
                 onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
                 onNavigateToPrayerTimes = { navController.navigate(Screen.PrayerTimes.route) { popUpTo(Screen.Home.route) } },
+                onNavigateToQibla = { navController.navigate(Screen.Qibla.route) },
                 onNavigateToAthkar = { navController.navigate(Screen.AthkarCategories.route) { popUpTo(Screen.Home.route) } },
                 onNavigateToDownloads = { navController.navigate(Screen.Downloads.route) { popUpTo(Screen.Home.route) } },
                 onNavigateToAbout = { navController.navigate(Screen.About.route) { popUpTo(Screen.Home.route) } },
                 onNavigateToReading = { navController.navigate(Screen.QuranIndex.route) { popUpTo(Screen.Home.route) } },
-                onNavigateToImsakiya = { navController.navigate(Screen.Imsakiya.route) }
+                onNavigateToImsakiya = { navController.navigate(Screen.Imsakiya.route) },
+                onNavigateToHadith = { navController.navigate(Screen.HadithLibrary.route) { popUpTo(Screen.Home.route) } },
+                onToggleDarkMode = onToggleDarkMode,
+                onNavigateByRoute = { route -> navigateByRoute(navController, route, onToggleDarkMode) }
             )
         }
 
@@ -408,6 +482,89 @@ fun QuranNavGraph(
             BackHandler { navController.navigateToHome() }
             ImskaiyaScreen(
                 onBack = { navController.navigateToHome() }
+            )
+        }
+
+        // Hadith Library screens
+        composable(Screen.HadithLibrary.route) {
+            BackHandler { navController.navigateToHome() }
+            HadithLibraryScreen(
+                onNavigateBack = { navController.navigateToHome() },
+                onNavigateToBook = { bookId ->
+                    navController.navigate(Screen.HadithBook.createRoute(bookId))
+                },
+                onNavigateToSearch = { bookId ->
+                    navController.navigate(Screen.HadithSearch.createRoute(bookId))
+                },
+                onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
+                onNavigateToReading = { navController.navigate(Screen.QuranIndex.route) { popUpTo(Screen.Home.route) } },
+                onNavigateToPrayerTimes = { navController.navigate(Screen.PrayerTimes.route) { popUpTo(Screen.Home.route) } },
+                onNavigateToQibla = { navController.navigate(Screen.Qibla.route) },
+                onNavigateToAthkar = { navController.navigate(Screen.AthkarCategories.route) { popUpTo(Screen.Home.route) } },
+                onNavigateToTracker = { navController.navigate(Screen.Tracker.route) { popUpTo(Screen.Home.route) } },
+                onNavigateToDownloads = { navController.navigate(Screen.Downloads.route) { popUpTo(Screen.Home.route) } },
+                onNavigateToAbout = { navController.navigate(Screen.About.route) { popUpTo(Screen.Home.route) } },
+                onNavigateToImsakiya = { navController.navigate(Screen.Imsakiya.route) },
+                onToggleDarkMode = onToggleDarkMode,
+                onNavigateByRoute = { route -> navigateByRoute(navController, route, onToggleDarkMode) }
+            )
+        }
+
+        composable(
+            route = Screen.HadithBook.route,
+            arguments = listOf(
+                navArgument("bookId") { type = NavType.StringType }
+            )
+        ) {
+            BackHandler { navController.popBackStack() }
+            HadithBookScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToReader = { bookId, chapterId, hadithIndex ->
+                    navController.navigate(Screen.HadithReader.createRoute(bookId, chapterId, hadithIndex))
+                },
+                onNavigateToSearch = { bookId ->
+                    navController.navigate(Screen.HadithSearch.createRoute(bookId))
+                },
+                onToggleDarkMode = onToggleDarkMode,
+                onNavigateByRoute = { route -> navigateByRoute(navController, route, onToggleDarkMode) }
+            )
+        }
+
+        composable(
+            route = Screen.HadithReader.route,
+            arguments = listOf(
+                navArgument("bookId") { type = NavType.StringType },
+                navArgument("chapterId") { type = NavType.IntType },
+                navArgument("hadithIndex") {
+                    type = NavType.IntType
+                    defaultValue = 0
+                }
+            )
+        ) {
+            BackHandler { navController.popBackStack() }
+            HadithReaderScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Screen.HadithSearch.route,
+            arguments = listOf(
+                navArgument("bookId") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                    nullable = true
+                }
+            )
+        ) { backStackEntry ->
+            val bookId = backStackEntry.arguments?.getString("bookId")?.takeIf { it.isNotEmpty() }
+            BackHandler { navController.popBackStack() }
+            HadithSearchScreen(
+                bookId = bookId,
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToReader = { searchBookId, chapterId, hadithIndex ->
+                    navController.navigate(Screen.HadithReader.createRoute(searchBookId, chapterId, hadithIndex))
+                }
             )
         }
 

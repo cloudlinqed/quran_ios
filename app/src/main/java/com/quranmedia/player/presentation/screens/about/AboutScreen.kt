@@ -28,20 +28,20 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.quranmedia.player.BuildConfig
 import com.quranmedia.player.data.repository.AppLanguage
+import com.quranmedia.player.presentation.components.BottomNavBar
+import com.quranmedia.player.presentation.components.DarkModeToggle
 import com.quranmedia.player.presentation.screens.reader.components.scheherazadeFont
+import com.quranmedia.player.presentation.theme.AppTheme
 import com.quranmedia.player.presentation.util.Strings
 import com.quranmedia.player.presentation.util.layoutDirection
-
-private val islamicGreen = Color(0xFF2E7D32)
-private val lightGreen = Color(0xFF66BB6A)
-private val darkGreen = Color(0xFF1B5E20)
-private val creamBackground = Color(0xFFFAF8F3)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AboutScreen(
+    onToggleDarkMode: () -> Unit = {},
     viewModel: AboutViewModel = hiltViewModel(),
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onNavigateByRoute: (String) -> Unit = {}
 ) {
     val settings by viewModel.settings.collectAsState()
     val language = settings.appLanguage
@@ -61,18 +61,28 @@ fun AboutScreen(
                             Icon(
                                 Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
-                                tint = Color.White
+                                tint = AppTheme.colors.goldAccent
                             )
                         }
                     },
+                    actions = {
+                        DarkModeToggle(language = language, onToggle = { onToggleDarkMode() })
+                    },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = islamicGreen,
-                        titleContentColor = Color.White,
-                        navigationIconContentColor = Color.White
+                        containerColor = AppTheme.colors.topBarBackground,
+                        titleContentColor = AppTheme.colors.goldAccent,
+                        navigationIconContentColor = AppTheme.colors.goldAccent
                     )
                 )
             },
-            containerColor = creamBackground
+            bottomBar = {
+                BottomNavBar(
+                    currentRoute = "about",
+                    language = language,
+                    onNavigate = onNavigateByRoute
+                )
+            },
+            containerColor = AppTheme.colors.screenBackground
         ) { paddingValues ->
             Column(
                 modifier = Modifier
@@ -86,7 +96,7 @@ fun AboutScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    colors = CardDefaults.cardColors(containerColor = AppTheme.colors.cardBackground),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Row(
@@ -98,7 +108,7 @@ fun AboutScreen(
                         Icon(
                             Icons.Default.Info,
                             contentDescription = null,
-                            tint = islamicGreen,
+                            tint = AppTheme.colors.islamicGreen,
                             modifier = Modifier.size(40.dp)
                         )
                         Spacer(modifier = Modifier.width(16.dp))
@@ -112,19 +122,19 @@ fun AboutScreen(
                                     fontFamily = scheherazadeFont,
                                     fontSize = 24.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = islamicGreen
+                                    color = AppTheme.colors.islamicGreen
                                 )
                                 Text(
                                     text = "Alfurqan",
                                     fontSize = 16.sp,
-                                    color = Color.Gray
+                                    color = AppTheme.colors.textSecondary
                                 )
                             }
                             Text(
                                 text = "${Strings.version.get(language)} ${BuildConfig.VERSION_NAME}",
                                 fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                                 fontSize = 12.sp,
-                                color = Color.Gray
+                                color = AppTheme.colors.textSecondary
                             )
                         }
                     }
@@ -144,7 +154,7 @@ fun AboutScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    colors = CardDefaults.cardColors(containerColor = AppTheme.colors.cardBackground),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Column(
@@ -160,7 +170,7 @@ fun AboutScreen(
                             Icon(
                                 Icons.Default.CloudQueue,
                                 contentDescription = null,
-                                tint = islamicGreen,
+                                tint = AppTheme.colors.islamicGreen,
                                 modifier = Modifier.size(24.dp)
                             )
                             Text(
@@ -168,11 +178,11 @@ fun AboutScreen(
                                 fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = islamicGreen
+                                color = AppTheme.colors.islamicGreen
                             )
                         }
 
-                        HorizontalDivider(color = Color.Gray.copy(alpha = 0.2f))
+                        HorizontalDivider(color = AppTheme.colors.divider)
 
                         // Tanzil
                         DataSourceCard(
@@ -210,7 +220,7 @@ fun AboutScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    colors = CardDefaults.cardColors(containerColor = AppTheme.colors.cardBackground),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Column(
@@ -227,7 +237,7 @@ fun AboutScreen(
                             Icon(
                                 Icons.Default.Security,
                                 contentDescription = null,
-                                tint = islamicGreen,
+                                tint = AppTheme.colors.islamicGreen,
                                 modifier = Modifier.size(24.dp)
                             )
                             Spacer(modifier = Modifier.width(12.dp))
@@ -237,7 +247,7 @@ fun AboutScreen(
                                     fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Medium,
-                                    color = Color.Black
+                                    color = AppTheme.colors.textPrimary
                                 )
                                 Text(
                                     text = if (language == AppLanguage.ARABIC)
@@ -246,12 +256,12 @@ fun AboutScreen(
                                         "No data collection • No tracking • Local storage only",
                                     fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                                     fontSize = 11.sp,
-                                    color = Color.Gray
+                                    color = AppTheme.colors.textSecondary
                                 )
                             }
                         }
 
-                        HorizontalDivider(color = Color.Gray.copy(alpha = 0.2f))
+                        HorizontalDivider(color = AppTheme.colors.divider)
 
                         // Contact row
                         Row(
@@ -261,7 +271,7 @@ fun AboutScreen(
                             Icon(
                                 Icons.Default.Email,
                                 contentDescription = null,
-                                tint = islamicGreen,
+                                tint = AppTheme.colors.islamicGreen,
                                 modifier = Modifier.size(24.dp)
                             )
                             Spacer(modifier = Modifier.width(12.dp))
@@ -271,12 +281,12 @@ fun AboutScreen(
                                     fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Medium,
-                                    color = Color.Black
+                                    color = AppTheme.colors.textPrimary
                                 )
                                 Text(
                                     text = "info@cloudlinqed.com",
                                     fontSize = 12.sp,
-                                    color = islamicGreen
+                                    color = AppTheme.colors.islamicGreen
                                 )
                             }
                         }
@@ -287,7 +297,7 @@ fun AboutScreen(
                 Text(
                     text = "© 2025 cloudlinqed.com",
                     fontSize = 12.sp,
-                    color = Color.Gray,
+                    color = AppTheme.colors.textSecondary,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -308,7 +318,7 @@ private fun CreditCardCompact(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = AppTheme.colors.cardBackground),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -339,13 +349,13 @@ private fun CreditCardCompact(
                     text = title,
                     fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                     fontSize = 12.sp,
-                    color = Color.Gray
+                    color = AppTheme.colors.textSecondary
                 )
                 Text(
                     text = subtitle,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    color = AppTheme.colors.textPrimary
                 )
             }
         }
@@ -366,13 +376,13 @@ private fun DataSourceCard(
             text = title,
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
-            color = islamicGreen
+            color = AppTheme.colors.islamicGreen
         )
         Text(
             text = description,
             fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
             fontSize = 12.sp,
-            color = Color.Gray,
+            color = AppTheme.colors.textSecondary,
             lineHeight = 16.sp
         )
     }

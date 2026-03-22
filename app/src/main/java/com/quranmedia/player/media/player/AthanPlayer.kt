@@ -31,7 +31,8 @@ enum class AthanPlaybackState {
 
 /**
  * Player specifically for Athan (call to prayer) audio.
- * Uses alarm audio type to ensure it plays even when phone is on silent/vibrate.
+ * Normal mode uses notification stream (respects silent/DND).
+ * High volume mode uses alarm stream (overrides silent, still respects DND).
  * Separate from QuranPlayer to avoid interfering with Quran recitation playback.
  */
 @Singleton
@@ -40,6 +41,7 @@ class AthanPlayer @Inject constructor(
 ) {
     private var _player: ExoPlayer? = null
     private var originalVolume: Int = -1
+    private var volumeStream: Int = -1
     private val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
     private val _playbackState = MutableStateFlow(AthanPlaybackState.IDLE)
@@ -50,7 +52,7 @@ class AthanPlayer @Inject constructor(
 
     private var onCompletionCallback: (() -> Unit)? = null
 
-    private fun createPlayer(): ExoPlayer {
+    private fun createPlayer(useAlarmStream: Boolean): ExoPlayer {
         // Create HTTP data source factory for streaming
         val httpDataSourceFactory = DefaultHttpDataSource.Factory()
             .setUserAgent("AlFurqan/1.0")
@@ -64,12 +66,16 @@ class AthanPlayer @Inject constructor(
         // Create media source factory with support for both HTTP and file URIs
         val mediaSourceFactory = DefaultMediaSourceFactory(dataSourceFactory)
 
+        // Normal mode: USAGE_NOTIFICATION respects silent mode and DND
+        // High volume mode: USAGE_ALARM overrides silent but DND still respected
+        val usage = if (useAlarmStream) C.USAGE_ALARM else C.USAGE_NOTIFICATION
+
         return ExoPlayer.Builder(context)
             .setMediaSourceFactory(mediaSourceFactory)
             .setAudioAttributes(
                 AudioAttributes.Builder()
-                    .setContentType(C.AUDIO_CONTENT_TYPE_SONIFICATION)
-                    .setUsage(C.USAGE_ALARM)  // Use alarm type to play over silent mode
+                    .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
+                    .setUsage(usage)
                     .build(),
                 false  // Don't handle audio focus automatically - we manage it
             )
@@ -78,7 +84,7 @@ class AthanPlayer @Inject constructor(
             .build()
             .apply {
                 addListener(playerListener)
-                Timber.d("AthanPlayer created with alarm audio attributes")
+                Timber.d("AthanPlayer created with ${if (useAlarmStream) "alarm" else "notification"} audio attributes")
             }
             .also { _player = it }
     }
@@ -145,8 +151,10 @@ class AthanPlayer @Inject constructor(
             // Stop any current playback
             stop()
 
-            // Create player if needed
-            val player = _player ?: createPlayer()
+            // Always recreate player with correct audio attributes (immutable after creation)
+            _player?.release()
+            _player = null
+            val player = createPlayer(useAlarmStream = maximizeVolume)
 
             // Store callback
             onCompletionCallback = onCompletion
@@ -217,39 +225,40 @@ class AthanPlayer @Inject constructor(
     }
 
     /**
-     * Save current volume and set to maximum for athan
+     * Save current volume and set to maximum for athan.
+     * Uses STREAM_ALARM when maximizeVolume is true, STREAM_NOTIFICATION otherwise.
      */
     private fun saveAndMaximizeVolume() {
         try {
-            // Save current alarm volume
-            originalVolume = audioManager.getStreamVolume(AudioManager.STREAM_ALARM)
+            volumeStream = AudioManager.STREAM_ALARM
+            originalVolume = audioManager.getStreamVolume(volumeStream)
 
-            // Set alarm volume to maximum
-            val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM)
+            val maxVolume = audioManager.getStreamMaxVolume(volumeStream)
             audioManager.setStreamVolume(
-                AudioManager.STREAM_ALARM,
+                volumeStream,
                 maxVolume,
                 0  // No flags - silent change
             )
-            Timber.d("Volume maximized for athan (was $originalVolume, now $maxVolume)")
+            Timber.d("Volume maximized for athan on stream $volumeStream (was $originalVolume, now $maxVolume)")
         } catch (e: Exception) {
             Timber.e(e, "Error maximizing volume")
         }
     }
 
     /**
-     * Restore volume to original level
+     * Restore volume to original level on the stream that was maximized
      */
     private fun restoreVolume() {
         try {
-            if (originalVolume >= 0) {
+            if (originalVolume >= 0 && volumeStream >= 0) {
                 audioManager.setStreamVolume(
-                    AudioManager.STREAM_ALARM,
+                    volumeStream,
                     originalVolume,
                     0  // No flags - silent change
                 )
-                Timber.d("Volume restored to $originalVolume")
+                Timber.d("Volume restored to $originalVolume on stream $volumeStream")
                 originalVolume = -1
+                volumeStream = -1
             }
         } catch (e: Exception) {
             Timber.e(e, "Error restoring volume")

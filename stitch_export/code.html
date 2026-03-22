@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ar"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>الفرقان - Quran App</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style data-purpose="custom-fonts">
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: #FDF9F1;
+            /* Subtle background pattern could go here */
+        }
+    </style>
+<style data-purpose="custom-utilities">
+        .glass-panel {
+            background: linear-gradient(135deg, rgba(35, 76, 62, 0.95) 0%, rgba(20, 50, 40, 0.95) 100%);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        .glass-panel::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+            transform: rotate(45deg);
+            pointer-events: none;
+        }
+        .btn-grid-item {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: transform 0.1s ease-in-out;
+        }
+        .btn-grid-item:active {
+            transform: scale(0.98);
+        }
+        .text-gold {
+            color: #C3A364;
+        }
+        .bg-gold {
+            background-color: #C3A364;
+        }
+        .border-gold {
+            border-color: #C3A364;
+        }
+        .bottom-nav-shadow {
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
+        }
+        
+        /* Specific card backgrounds based on image */
+        .bg-card-green { background-color: #E6F2E6; border: 1px solid #CDE2CD; }
+        .bg-card-yellow { background-color: #FDF6E3; border: 1px solid #EBE2C8; }
+        .bg-card-blue { background-color: #EAF4FF; border: 1px solid #D1E5FC; }
+        .bg-card-light { background-color: #F9F7EF; border: 1px solid #EBE6D6; }
+    </style>
+<!-- Include FontAwesome for icons as placeholder -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="text-gray-800 min-h-screen flex flex-col max-w-md mx-auto relative pb-20">
+<!-- BEGIN: TopBar -->
+<header class="flex justify-between items-center px-6 pt-12 pb-4">
+<div class="w-8"></div> <!-- Spacer -->
+<h1 class="text-4xl font-bold text-gold tracking-wider">الْفُرْقَان</h1>
+<button class="bg-card-yellow text-sm font-semibold px-3 py-1 rounded-full border border-[#EBE2C8]">
+            AR <span class="text-gray-400 font-normal">/ EN</span>
+</button>
+</header>
+<!-- END: TopBar -->
+<!-- BEGIN: Main Content -->
+<main class="flex-grow px-5 pb-6">
+<!-- BEGIN: Audio Player Widget -->
+<section class="glass-panel rounded-3xl p-5 mb-6 text-white" data-purpose="audio-player">
+<h2 class="text-center text-xl font-bold mb-4 text-[#E8F0E8]">تلاوة</h2>
+<!-- Progress Bar -->
+<div class="mb-4">
+<div class="h-1 bg-gray-600 rounded-full relative">
+<div class="absolute top-0 right-0 h-full bg-gold rounded-full w-1/3"></div>
+<div class="absolute top-1/2 right-1/3 w-3 h-3 bg-gold rounded-full transform translate-x-1/2 -translate-y-1/2 shadow-md"></div>
+</div>
+<div class="flex justify-between text-xs mt-2 text-gray-300 font-mono">
+<span>12:45</span>
+<span class="text-gold">04:20 /</span>
+</div>
+</div>
+<!-- Selectors -->
+<div class="flex gap-3 mb-6">
+<!-- Sura Selector -->
+<div class="flex-1 bg-white rounded-xl py-2 px-3 flex justify-between items-center text-gray-800">
+<i class="fa-solid fa-chevron-down text-gray-400 text-xs"></i>
+<div class="text-right flex-grow pr-2">
+<div class="text-[10px] text-gray-500">السورة</div>
+<div class="font-bold text-sm leading-tight">الفاتحة</div>
+</div>
+</div>
+<!-- Reciter Selector -->
+<div class="flex-1 bg-white rounded-xl py-2 px-3 flex justify-between items-center text-gray-800">
+<i class="fa-solid fa-chevron-down text-gray-400 text-xs"></i>
+<div class="text-right flex-grow pr-2">
+<div class="text-[10px] text-gray-500">القارئ</div>
+<div class="font-bold text-sm leading-tight whitespace-nowrap overflow-hidden text-ellipsis">مشاري راشد العفاسي</div>
+</div>
+</div>
+</div>
+<!-- Controls -->
+<div class="flex justify-between items-center px-4">
+<button class="text-gold opacity-80 hover:opacity-100"><i class="fa-solid fa-repeat"></i></button>
+<div class="flex items-center gap-6">
+<button class="text-gold opacity-80 hover:opacity-100"><i class="fa-solid fa-forward-step"></i></button>
+<button class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-[#234C3E] shadow-lg transform hover:scale-105 transition-transform">
+<i class="fa-solid fa-play ml-1 text-lg"></i>
+</button>
+<button class="text-gold opacity-80 hover:opacity-100"><i class="fa-solid fa-backward-step"></i></button>
+</div>
+<button class="text-gold opacity-80 hover:opacity-100"><i class="fa-solid fa-shuffle"></i></button>
+</div>
+</section>
+<!-- END: Audio Player Widget -->
+<!-- BEGIN: Main Navigation Grid -->
+<section class="grid grid-cols-3 gap-3 mb-4" data-purpose="primary-nav">
+<!-- Hadith Card -->
+<a class="btn-grid-item bg-card-blue rounded-2xl p-4 flex flex-col items-center justify-center text-center relative overflow-hidden h-32" href="#">
+<!-- Subtle pattern placeholder -->
+<div class="absolute bottom-0 right-0 opacity-10 text-4xl transform translate-x-2 translate-y-2"><i class="fa-solid fa-book-open"></i></div>
+<div class="w-10 h-10 mb-2 flex items-center justify-center text-[#4A729A] text-2xl relative">
+<i class="fa-solid fa-book-open-reader"></i>
+<i class="fa-solid fa-quote-right absolute -top-1 -right-1 text-[10px]"></i>
+</div>
+<h3 class="font-bold text-sm text-gray-800">الأحاديث</h3>
+</a>
+<!-- Prayer Times Card -->
+<a class="btn-grid-item bg-card-yellow border-gold rounded-2xl p-4 flex flex-col items-center justify-center text-center relative overflow-hidden h-32" href="#">
+<div class="absolute bottom-0 left-0 opacity-10 text-4xl transform -translate-x-2 translate-y-2"><i class="fa-regular fa-clock"></i></div>
+<div class="w-10 h-10 mb-1 flex items-center justify-center text-[#234C3E] text-2xl">
+<i class="fa-regular fa-clock"></i>
+</div>
+<h3 class="font-bold text-sm text-gray-800 mb-1">مواقيت الصلاة</h3>
+<p class="text-[10px] text-gray-500">العصر 3:45 م</p>
+</a>
+<!-- Quran Card -->
+<a class="btn-grid-item bg-card-green rounded-2xl p-4 flex flex-col items-center justify-center text-center relative overflow-hidden h-32" href="#">
+<div class="absolute bottom-0 left-0 opacity-10 text-4xl transform -translate-x-2 translate-y-2"><i class="fa-solid fa-quran"></i></div>
+<div class="w-10 h-10 mb-2 flex items-center justify-center text-[#234C3E] text-3xl">
+<i class="fa-solid fa-book-quran"></i>
+</div>
+<h3 class="font-bold text-sm text-gray-800">القرآن الكريم</h3>
+</a>
+</section>
+<!-- END: Main Navigation Grid -->
+<!-- BEGIN: Secondary Navigation -->
+<section class="flex flex-col gap-3" data-purpose="secondary-nav">
+<div class="flex gap-3">
+<a class="flex-1 btn-grid-item bg-card-light rounded-xl p-3 flex justify-between items-center flex-row-reverse" href="#">
+<i class="fa-regular fa-square-check text-[#234C3E] text-lg"></i>
+<span class="font-bold text-sm text-gray-800">المتابعة اليومية</span>
+</a>
+<a class="flex-1 btn-grid-item bg-card-light rounded-xl p-3 flex justify-between items-center flex-row-reverse" href="#">
+<i class="fa-regular fa-star text-[#234C3E] text-lg"></i>
+<span class="font-bold text-sm text-gray-800">الأذكار</span>
+</a>
+</div>
+<div class="flex gap-3">
+<a class="flex-1 btn-grid-item bg-card-light rounded-xl p-3 flex justify-between items-center flex-row-reverse" href="#">
+<i class="fa-solid fa-download text-[#234C3E] text-lg"></i>
+<span class="font-bold text-sm text-gray-800">التنزيلات</span>
+</a>
+<a class="flex-1 btn-grid-item bg-card-light rounded-xl p-3 flex justify-between items-center flex-row-reverse" href="#">
+<i class="fa-regular fa-heart text-[#234C3E] text-lg"></i>
+<span class="font-bold text-sm text-gray-800">المفضلة</span>
+</a>
+</div>
+</section>
+<!-- END: Secondary Navigation -->
+<!-- Version Number -->
+<div class="text-center mt-6 text-xs text-gray-400 font-mono">
+            v2.3.5
+        </div>
+</main>
+<!-- END: Main Content -->
+<!-- BEGIN: Bottom Navigation -->
+<nav class="fixed bottom-0 left-0 right-0 bg-white bottom-nav-shadow max-w-md mx-auto z-50 px-6 py-3 rounded-t-3xl border-t border-gray-100" data-purpose="bottom-bar">
+<ul class="flex justify-between items-end">
+<li class="flex-1 text-center">
+<a class="flex flex-col items-center text-gray-400 hover:text-gray-800 transition-colors" href="#">
+<i class="fa-solid fa-ellipsis mb-1 text-xl"></i>
+<span class="text-[10px] font-bold">المزيد</span>
+</a>
+</li>
+<li class="flex-1 text-center">
+<a class="flex flex-col items-center text-gray-400 hover:text-gray-800 transition-colors" href="#">
+<i class="fa-solid fa-hands-praying mb-1 text-xl"></i>
+<span class="text-[10px] font-bold">الأذكار</span>
+</a>
+</li>
+<li class="flex-1 text-center">
+<a class="flex flex-col items-center text-gray-400 hover:text-gray-800 transition-colors" href="#">
+<i class="fa-solid fa-person-praying mb-1 text-xl"></i>
+<span class="text-[10px] font-bold">الصلاة</span>
+</a>
+</li>
+<li class="flex-1 text-center">
+<a class="flex flex-col items-center text-gray-400 hover:text-gray-800 transition-colors" href="#">
+<i class="fa-solid fa-book-open mb-1 text-xl"></i>
+<span class="text-[10px] font-bold">القرآن</span>
+</a>
+</li>
+<li class="flex-1 text-center">
+<a class="flex flex-col items-center text-gold transition-colors" href="#">
+<i class="fa-solid fa-house mb-1 text-xl"></i>
+<span class="text-[10px] font-bold">الرئيسية</span>
+</a>
+</li>
+</ul>
+<!-- iOS Home Indicator Space -->
+<div class="w-1/3 h-1 bg-gray-300 rounded-full mx-auto mt-4 mb-1"></div>
+</nav>
+<!-- END: Bottom Navigation -->
+</body></html>

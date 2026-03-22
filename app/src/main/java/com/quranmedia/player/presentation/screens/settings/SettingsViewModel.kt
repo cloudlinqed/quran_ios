@@ -6,6 +6,7 @@ import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.quranmedia.player.data.repository.AppLanguage
+import com.quranmedia.player.data.repository.DarkModePreference
 import com.quranmedia.player.data.repository.ReadingTheme
 import com.quranmedia.player.data.repository.ReminderInterval
 import com.quranmedia.player.data.repository.SettingsRepository
@@ -151,21 +152,42 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    // Remember if Mushaf font was active before Tajweed switched it off
+    private var qcfStateBeforeTajweed: Boolean? = null
+
     fun setReadingTheme(theme: ReadingTheme) {
-        // Block Tajweed theme if V4 fonts not downloaded — show download prompt instead
-        if (theme == ReadingTheme.TAJWEED && !fontDownloadManager.isV4Downloaded()) {
-            _showV4DownloadPrompt.value = true
-            return
-        }
+        val currentSettings = settingsRepository.getCurrentSettings()
 
         viewModelScope.launch {
-            settingsRepository.setReadingTheme(theme)
+            if (theme == ReadingTheme.TAJWEED) {
+                // Tajweed uses TajweedRuleEngine on normal KFGQPC font — switch OFF Mushaf mode
+                if (currentSettings.useQCFFont) {
+                    qcfStateBeforeTajweed = true
+                    settingsRepository.setUseQCFFont(false)
+                }
+            } else if (currentSettings.readingTheme == ReadingTheme.TAJWEED) {
+                // Leaving Tajweed — restore Mushaf font if it was on before
+                if (qcfStateBeforeTajweed == true) {
+                    settingsRepository.setUseQCFFont(true)
+                    qcfStateBeforeTajweed = null
+                }
+            }
 
-            // If TAJWEED theme selected and Mushaf mode is active, enable V4 (Tajweed) font
-            // If other theme selected, disable V4 mode
-            val currentSettings = settingsRepository.getCurrentSettings()
-            if (currentSettings.useQCFFont) {
-                settingsRepository.setQCFTajweedMode(theme == ReadingTheme.TAJWEED)
+            settingsRepository.setReadingTheme(theme)
+        }
+    }
+
+    fun setDarkModePreference(preference: DarkModePreference) {
+        viewModelScope.launch {
+            val currentTheme = settingsRepository.getCurrentSettings().readingTheme
+            settingsRepository.setDarkModePreference(preference)
+            // Auto-switch reading theme when explicitly choosing dark/light
+            if (preference == DarkModePreference.ON &&
+                currentTheme != ReadingTheme.NIGHT && currentTheme != ReadingTheme.CUSTOM
+            ) {
+                settingsRepository.setReadingTheme(ReadingTheme.NIGHT)
+            } else if (preference == DarkModePreference.OFF && currentTheme == ReadingTheme.NIGHT) {
+                settingsRepository.setReadingTheme(ReadingTheme.SEPIA)
             }
         }
     }
@@ -246,6 +268,40 @@ class SettingsViewModel @Inject constructor(
     fun deleteV4Fonts() {
         viewModelScope.launch {
             fontDownloadManager.deleteV4Fonts()
+        }
+    }
+
+    // ── Athkar Notification Settings ──
+
+    fun setMorningAthkarNotificationEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setMorningAthkarNotificationEnabled(enabled)
+            val settings = settingsRepository.getCurrentSettings()
+            com.quranmedia.player.data.notification.AthkarAlarmReceiver.scheduleFromSettings(context, settings)
+        }
+    }
+
+    fun setEveningAthkarNotificationEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setEveningAthkarNotificationEnabled(enabled)
+            val settings = settingsRepository.getCurrentSettings()
+            com.quranmedia.player.data.notification.AthkarAlarmReceiver.scheduleFromSettings(context, settings)
+        }
+    }
+
+    fun setMorningAthkarNotificationTime(hour: Int, minute: Int) {
+        viewModelScope.launch {
+            settingsRepository.setMorningAthkarNotificationTime(hour, minute)
+            val settings = settingsRepository.getCurrentSettings()
+            com.quranmedia.player.data.notification.AthkarAlarmReceiver.scheduleFromSettings(context, settings)
+        }
+    }
+
+    fun setEveningAthkarNotificationTime(hour: Int, minute: Int) {
+        viewModelScope.launch {
+            settingsRepository.setEveningAthkarNotificationTime(hour, minute)
+            val settings = settingsRepository.getCurrentSettings()
+            com.quranmedia.player.data.notification.AthkarAlarmReceiver.scheduleFromSettings(context, settings)
         }
     }
 }

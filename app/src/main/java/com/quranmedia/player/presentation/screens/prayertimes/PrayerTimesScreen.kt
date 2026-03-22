@@ -4,11 +4,13 @@ import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -28,24 +30,26 @@ import com.quranmedia.player.data.repository.AppLanguage
 import com.quranmedia.player.domain.model.PrayerTimes
 import com.quranmedia.player.domain.model.PrayerType
 import com.quranmedia.player.presentation.screens.reader.components.scheherazadeFont
-import com.quranmedia.player.presentation.screens.reader.components.islamicGreen
-import com.quranmedia.player.presentation.screens.reader.components.darkGreen
-import com.quranmedia.player.presentation.screens.reader.components.lightGreen
-import com.quranmedia.player.presentation.screens.reader.components.goldAccent
-import com.quranmedia.player.presentation.screens.reader.components.creamBackground
-import com.quranmedia.player.presentation.screens.reader.components.coffeeBrown
-import com.quranmedia.player.presentation.screens.reader.components.softWoodBrown
+import com.quranmedia.player.presentation.theme.AppTheme
 import com.quranmedia.player.presentation.util.layoutDirection
 import com.quranmedia.player.presentation.util.Strings
-import com.quranmedia.player.presentation.components.CommonOverflowMenu
+import com.quranmedia.player.presentation.components.BottomNavBar
+import com.quranmedia.player.presentation.components.DarkModeToggle
 import com.quranmedia.player.domain.util.ArabicNumeralUtils
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
-// Ramadan accent colors (subtle hints)
+// Ramadan accent colors (subtle hints) — hidden outside Ramadan
 private val RamadanNight = Color(0xFF1A1A2E)
 private val RamadanPurple = Color(0xFF2D2B55)
 private val RamadanGold = Color(0xFFFFD700)
+
+// Prayer-specific colors (dark mode uses AppTheme.colors for bg/text)
+private val BrandGreen = Color(0xFF2B4234)      // next prayer card bg (dark green — works in both modes)
+private val HighlightBgLight = Color(0xFFEFE6D5) // highlighted prayer row (light mode)
+private val HighlightBgDark = Color(0xFF3A3020)   // highlighted prayer row (dark mode)
+private val IconCircleBgLight = Color(0xFFF3ECE0)
+private val IconCircleBgDark = Color(0xFF3A3530)
 
 // Hijri months in order (for date adjustment calculations)
 private val hijriMonthsEnglish = listOf(
@@ -127,14 +131,18 @@ private fun calculateAdjustedHijriDate(
 @Composable
 fun PrayerTimesScreen(
     onNavigateBack: () -> Unit,
+    onToggleDarkMode: () -> Unit = {},
     onNavigateToAthanSettings: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
+    onNavigateToQibla: () -> Unit = {},
     onNavigateToAthkar: () -> Unit = {},
     onNavigateToTracker: () -> Unit = {},
     onNavigateToDownloads: () -> Unit = {},
     onNavigateToAbout: () -> Unit = {},
     onNavigateToReading: () -> Unit = {},
     onNavigateToImsakiya: () -> Unit = {},
+    onNavigateToHadith: () -> Unit = {},
+    onNavigateByRoute: (String) -> Unit = {},
     viewModel: PrayerTimesViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -187,22 +195,13 @@ fun PrayerTimesScreen(
                         }
                     },
                     actions = {
-                        CommonOverflowMenu(
-                            language = language,
-                            onNavigateToSettings = onNavigateToSettings,
-                            onNavigateToReading = onNavigateToReading,
-                            onNavigateToImsakiya = onNavigateToImsakiya,
-                            onNavigateToAthkar = onNavigateToAthkar,
-                            onNavigateToTracker = onNavigateToTracker,
-                            onNavigateToDownloads = onNavigateToDownloads,
-                            onNavigateToAbout = onNavigateToAbout,
-                            hidePrayerTimes = true  // Hide Prayer Times since we're on this screen
-                        )
+                        DarkModeToggle(language = language, onToggle = { onToggleDarkMode() })
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = islamicGreen,
-                        titleContentColor = Color.White,
-                        navigationIconContentColor = Color.White
+                        containerColor = AppTheme.colors.topBarBackground,
+                        titleContentColor = AppTheme.colors.goldAccent,
+                        navigationIconContentColor = AppTheme.colors.goldAccent,
+                        actionIconContentColor = AppTheme.colors.goldAccent
                     )
                 )
             },
@@ -210,20 +209,27 @@ fun PrayerTimesScreen(
                 SnackbarHost(hostState = snackbarHostState) { data ->
                     Snackbar(
                         snackbarData = data,
-                        containerColor = darkGreen,
-                        contentColor = Color.White
+                        containerColor = AppTheme.colors.darkGreen,
+                        contentColor = AppTheme.colors.textOnPrimary
                     )
                 }
             },
-            containerColor = creamBackground
+            containerColor = AppTheme.colors.screenBackground,
+            bottomBar = {
+                BottomNavBar(
+                    currentRoute = "prayerTimes",
+                    language = language,
+                    onNavigate = { route -> onNavigateByRoute(route) }
+                )
+            }
         ) { paddingValues ->
             val useIndoArabic = language == AppLanguage.ARABIC && settings.useIndoArabicNumerals
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                    .padding(horizontal = 10.dp, vertical = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 // Location card - compact
                 LocationCard(
@@ -267,7 +273,7 @@ fun PrayerTimesScreen(
                             .weight(1f),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator(color = islamicGreen)
+                        CircularProgressIndicator(color = AppTheme.colors.islamicGreen)
                     }
                 }
 
@@ -301,6 +307,37 @@ fun PrayerTimesScreen(
                         )
                     }
 
+                    // Qibla Direction card — dark green bar
+                    Surface(
+                        onClick = { onNavigateToQibla() },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp),
+                        color = BrandGreen
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowForward, null,
+                                tint = AppTheme.colors.goldAccent,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = if (language == AppLanguage.ARABIC) "اتجاه القبلة" else "Qibla Direction",
+                                    fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = AppTheme.colors.goldAccent
+                                )
+                                Spacer(Modifier.width(6.dp))
+                                Icon(Icons.Default.Explore, null, tint = AppTheme.colors.goldAccent, modifier = Modifier.size(18.dp))
+                            }
+                        }
+                    }
+
                     // All prayer times - takes remaining space
                     PrayerTimesCard(
                         prayerTimes = prayerTimes,
@@ -317,7 +354,7 @@ fun PrayerTimesScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f),
-                        colors = CardDefaults.cardColors(containerColor = lightGreen),
+                        colors = CardDefaults.cardColors(containerColor = AppTheme.colors.lightGreen),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Column(
@@ -330,7 +367,7 @@ fun PrayerTimesScreen(
                             Icon(
                                 Icons.Default.LocationOn,
                                 contentDescription = null,
-                                tint = islamicGreen,
+                                tint = AppTheme.colors.islamicGreen,
                                 modifier = Modifier.size(48.dp)
                             )
                             Spacer(modifier = Modifier.height(12.dp))
@@ -341,7 +378,7 @@ fun PrayerTimesScreen(
                                     "Please set your location to view prayer times",
                                 fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                                 textAlign = TextAlign.Center,
-                                color = islamicGreen
+                                color = AppTheme.colors.islamicGreen
                             )
                         }
                     }
@@ -406,83 +443,48 @@ private fun LocationCard(
     onManualLocation: () -> Unit,
     useIndoArabic: Boolean = false
 ) {
-    Card(
+    Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(10.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        shape = RoundedCornerShape(12.dp),
+        color = AppTheme.colors.cardBackground
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 10.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Left side: Hijri date and location
             Column(modifier = Modifier.weight(1f)) {
-                // Hijri date - compact
                 hijriDate?.let { date ->
-                    Text(
-                        text = date,
-                        fontFamily = scheherazadeFont,
-                        fontSize = 15.sp,
-                        color = darkGreen,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                // Location row
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Default.LocationOn,
-                        contentDescription = null,
-                        tint = islamicGreen,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = location?.cityName
-                            ?: if (language == AppLanguage.ARABIC) "الموقع غير محدد" else "Location not set",
-                        fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 13.sp,
-                        color = coffeeBrown
-                    )
-                    location?.countryName?.let { country ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.CalendarMonth, null, tint = AppTheme.colors.goldAccent, modifier = Modifier.size(14.dp))
+                        Spacer(Modifier.width(6.dp))
                         Text(
-                            text = ", $country",
-                            fontSize = 12.sp,
-                            color = islamicGreen
+                            text = date,
+                            fontFamily = scheherazadeFont,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = AppTheme.colors.textPrimary
                         )
                     }
                 }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.LocationOn, null, tint = AppTheme.colors.goldAccent, modifier = Modifier.size(14.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = buildString {
+                            append(location?.cityName ?: if (language == AppLanguage.ARABIC) "الموقع غير محدد" else "Location not set")
+                            location?.countryName?.let { append(", $it") }
+                        },
+                        fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
+                        fontSize = 12.sp,
+                        color = AppTheme.colors.textSecondary
+                    )
+                }
             }
-
-            // Right side: compact location buttons
-            Row {
-                IconButton(
-                    onClick = onDetectLocation,
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(
-                        Icons.Default.MyLocation,
-                        contentDescription = "Detect Location",
-                        tint = islamicGreen,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-                IconButton(
-                    onClick = onManualLocation,
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(
-                        Icons.Default.Edit,
-                        contentDescription = "Manual Location",
-                        tint = islamicGreen,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
+            IconButton(onClick = onDetectLocation, modifier = Modifier.size(28.dp)) {
+                Icon(Icons.Default.MyLocation, "Detect", tint = AppTheme.colors.goldAccent, modifier = Modifier.size(16.dp))
+            }
+            IconButton(onClick = onManualLocation, modifier = Modifier.size(28.dp)) {
+                Icon(Icons.Default.Edit, "Manual", tint = AppTheme.colors.goldAccent, modifier = Modifier.size(14.dp))
             }
         }
     }
@@ -514,101 +516,78 @@ private fun NextPrayerCard(
         }
     }
 
-    // Check if it's Fajr or Maghrib (important for Ramadan fasting)
-    val isRamadanPrayer = nextPrayer == PrayerType.FAJR || nextPrayer == PrayerType.MAGHRIB
+    // Ramadan fasting labels — hidden outside Ramadan
+    val isRamadanPrayer = false
 
-    Card(
+    Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+        color = BrandGreen
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    Brush.horizontalGradient(
-                        colors = if (isRamadanPrayer) {
-                            listOf(RamadanNight, RamadanPurple)
-                        } else {
-                            listOf(islamicGreen, darkGreen)
-                        }
-                    )
-                )
-                .padding(horizontal = 12.dp, vertical = 10.dp)
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            // Countdown box
+            Surface(
+                shape = RoundedCornerShape(10.dp),
+                color = Color(0xFF3A5344)
             ) {
-                // Left side - prayer icon and info
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    // Compact prayer icon
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .size(36.dp)
-                            .background(
-                                color = if (isRamadanPrayer) RamadanGold.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.1f),
-                                shape = RoundedCornerShape(10.dp)
-                            )
-                    ) {
-                        Icon(
-                            imageVector = getIconForPrayer(nextPrayer),
-                            contentDescription = null,
-                            tint = if (isRamadanPrayer) RamadanGold else Color.White,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Column {
+                Column(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = if (language == AppLanguage.ARABIC) "متبقي" else "remaining",
+                        fontSize = 10.sp,
+                        color = AppTheme.colors.goldAccent.copy(alpha = 0.8f)
+                    )
+                    Text(
+                        text = timeRemaining,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+            }
+
+            // Prayer info + icon
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = if (language == AppLanguage.ARABIC) "الصلاة القادمة" else "Next Prayer",
+                        fontSize = 10.sp,
+                        color = AppTheme.colors.goldAccent
+                    )
+                    Row(verticalAlignment = Alignment.Bottom) {
                         Text(
-                            text = if (language == AppLanguage.ARABIC) "الصلاة القادمة" else "Next Prayer",
-                            fontSize = 10.sp,
-                            color = Color.White.copy(alpha = 0.7f)
+                            text = if (language == AppLanguage.ARABIC) nextPrayer.nameArabic else nextPrayer.nameEnglish,
+                            fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
                         )
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = if (language == AppLanguage.ARABIC)
-                                    nextPrayer.nameArabic
-                                else
-                                    nextPrayer.nameEnglish,
-                                fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = formatPrayerTime(prayerTime, language, useIndoArabic),
-                                fontSize = 13.sp,
-                                color = if (isRamadanPrayer) RamadanGold.copy(alpha = 0.9f) else Color.White.copy(alpha = 0.85f)
-                            )
-                        }
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            text = formatPrayerTime(prayerTime, language, useIndoArabic),
+                            fontSize = 11.sp,
+                            color = Color.White.copy(alpha = 0.7f),
+                            modifier = Modifier.padding(bottom = 2.dp)
+                        )
                     }
                 }
-
-                // Right side - countdown compact
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(
-                            if (isRamadanPrayer) RamadanGold.copy(alpha = 0.2f) else Color.White.copy(alpha = 0.15f)
-                        )
-                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                Spacer(Modifier.width(8.dp))
+                Surface(
+                    shape = RoundedCornerShape(50),
+                    color = AppTheme.colors.topBarBackground,
+                    modifier = Modifier.size(40.dp)
                 ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = if (language == AppLanguage.ARABIC) "متبقي" else "in",
-                            fontSize = 9.sp,
-                            color = Color.White.copy(alpha = 0.7f)
-                        )
-                        Text(
-                            text = timeRemaining,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (isRamadanPrayer) RamadanGold else Color.White
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            getIconForPrayer(nextPrayer), null,
+                            tint = Color.White,
+                            modifier = Modifier.size(22.dp)
                         )
                     }
                 }
@@ -625,30 +604,17 @@ private fun PrayerTimesCard(
     useIndoArabic: Boolean = false,
     modifier: Modifier = Modifier
 ) {
-    Card(
+    Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+        shape = RoundedCornerShape(12.dp),
+        color = AppTheme.colors.cardBackground
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            // Islamic decorative header - compact
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Section header
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(
-                        Brush.horizontalGradient(
-                            colors = listOf(
-                                RamadanPurple.copy(alpha = 0.08f),
-                                goldAccent.copy(alpha = 0.15f),
-                                islamicGreen.copy(alpha = 0.08f),
-                                goldAccent.copy(alpha = 0.15f),
-                                RamadanPurple.copy(alpha = 0.08f)
-                            )
-                        )
-                    )
+                    .background(AppTheme.colors.surfaceVariant)
                     .padding(vertical = 6.dp),
                 contentAlignment = Alignment.Center
             ) {
@@ -656,86 +622,34 @@ private fun PrayerTimesCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.NightsStay,
-                        contentDescription = null,
-                        tint = goldAccent,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("✦", color = AppTheme.colors.goldAccent, fontSize = 10.sp)
+                    Spacer(Modifier.width(6.dp))
                     Text(
                         text = if (language == AppLanguage.ARABIC) "أوقات الصلاة" else "Prayer Times",
                         fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
-                        fontSize = 15.sp,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
-                        color = darkGreen
+                        color = AppTheme.colors.textPrimary
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "✦",
-                        color = goldAccent,
-                        fontSize = 12.sp
-                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text("✦", color = AppTheme.colors.goldAccent, fontSize = 10.sp)
                 }
             }
 
-            // Decorative gold line
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(1.dp)
-                    .background(
-                        Brush.horizontalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                goldAccent.copy(alpha = 0.4f),
-                                goldAccent.copy(alpha = 0.8f),
-                                goldAccent.copy(alpha = 0.4f),
-                                Color.Transparent
-                            )
-                        )
-                    )
-            )
-
-            // Prayer times list - fill remaining space evenly
+            // Prayer times list
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .padding(horizontal = 6.dp, vertical = 4.dp),
+                    .padding(horizontal = 8.dp, vertical = 2.dp),
                 verticalArrangement = Arrangement.SpaceEvenly
             ) {
-                PrayerTimeRow(PrayerType.FAJR, prayerTimes.fajr, nextPrayer == PrayerType.FAJR, language, useIndoArabic, isRamadanPrayer = true)
+                PrayerTimeRow(PrayerType.FAJR, prayerTimes.fajr, nextPrayer == PrayerType.FAJR, language, useIndoArabic)
                 PrayerTimeRow(PrayerType.SUNRISE, prayerTimes.sunrise, nextPrayer == PrayerType.SUNRISE, language, useIndoArabic)
                 PrayerTimeRow(PrayerType.DHUHR, prayerTimes.dhuhr, nextPrayer == PrayerType.DHUHR, language, useIndoArabic)
                 PrayerTimeRow(PrayerType.ASR, prayerTimes.asr, nextPrayer == PrayerType.ASR, language, useIndoArabic)
-                PrayerTimeRow(PrayerType.MAGHRIB, prayerTimes.maghrib, nextPrayer == PrayerType.MAGHRIB, language, useIndoArabic, isRamadanPrayer = true)
+                PrayerTimeRow(PrayerType.MAGHRIB, prayerTimes.maghrib, nextPrayer == PrayerType.MAGHRIB, language, useIndoArabic)
                 PrayerTimeRow(PrayerType.ISHA, prayerTimes.isha, nextPrayer == PrayerType.ISHA, language, useIndoArabic)
-            }
-
-            // Bottom decorative element - compact
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        Brush.horizontalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                goldAccent.copy(alpha = 0.1f),
-                                goldAccent.copy(alpha = 0.2f),
-                                goldAccent.copy(alpha = 0.1f),
-                                Color.Transparent
-                            )
-                        )
-                    )
-                    .padding(vertical = 4.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "☪ ۩ ☪",
-                    color = goldAccent.copy(alpha = 0.6f),
-                    fontSize = 10.sp
-                )
             }
         }
     }
@@ -750,98 +664,51 @@ private fun PrayerTimeRow(
     useIndoArabic: Boolean = false,
     isRamadanPrayer: Boolean = false
 ) {
-    val backgroundColor = when {
-        isNext -> goldAccent.copy(alpha = 0.2f)
-        isRamadanPrayer -> RamadanPurple.copy(alpha = 0.06f)
-        else -> Color.Transparent
-    }
-
-    val iconTint = when {
-        isNext -> islamicGreen
-        isRamadanPrayer -> RamadanPurple.copy(alpha = 0.7f)
-        else -> softWoodBrown
-    }
-
-    val textColor = when {
-        isNext -> islamicGreen
-        isRamadanPrayer -> RamadanNight
-        else -> coffeeBrown
-    }
+    val isArabic = language == AppLanguage.ARABIC
+    val rowBg = if (isNext) if (isSystemInDarkTheme()) HighlightBgDark else HighlightBgLight else Color.Transparent
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(backgroundColor, shape = RoundedCornerShape(8.dp))
-            .padding(horizontal = 10.dp, vertical = 8.dp),
+            .background(rowBg, shape = RoundedCornerShape(8.dp))
+            .padding(horizontal = 8.dp, vertical = 6.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.weight(1f)
-        ) {
-            // Compact icon
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier = Modifier
                     .size(28.dp)
-                    .background(
-                        color = if (isNext) islamicGreen.copy(alpha = 0.1f)
-                               else if (isRamadanPrayer) RamadanPurple.copy(alpha = 0.08f)
-                               else softWoodBrown.copy(alpha = 0.08f),
-                        shape = RoundedCornerShape(6.dp)
-                    ),
+                    .background(if (isSystemInDarkTheme()) IconCircleBgDark else IconCircleBgLight, shape = RoundedCornerShape(50)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = getIconForPrayer(prayerType),
-                    contentDescription = null,
-                    tint = iconTint,
+                    getIconForPrayer(prayerType), null,
+                    tint = if (prayerType == PrayerType.FAJR || prayerType == PrayerType.ISHA)
+                        BrandGreen else AppTheme.colors.goldAccent,
                     modifier = Modifier.size(16.dp)
                 )
             }
-            Spacer(modifier = Modifier.width(10.dp))
-            // Prayer name and optional Ramadan label
+            Spacer(Modifier.width(8.dp))
             Text(
-                text = if (language == AppLanguage.ARABIC)
-                    prayerType.nameArabic
-                else
-                    prayerType.nameEnglish,
-                fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
-                fontSize = 14.sp,
-                fontWeight = if (isNext) FontWeight.Bold else FontWeight.Medium,
-                color = textColor
+                text = if (isArabic) prayerType.nameArabic else prayerType.nameEnglish,
+                fontFamily = if (isArabic) scheherazadeFont else null,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                color = AppTheme.colors.textPrimary
             )
-            // Show Ramadan label inline for Fajr/Maghrib
-            if (isRamadanPrayer) {
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = if (prayerType == PrayerType.FAJR) {
-                        if (language == AppLanguage.ARABIC) "(إمساك)" else "(Suhoor)"
-                    } else {
-                        if (language == AppLanguage.ARABIC) "(إفطار)" else "(Iftar)"
-                    },
-                    fontSize = 10.sp,
-                    color = RamadanPurple.copy(alpha = 0.6f)
-                )
-            }
         }
 
-        // Time display - compact
-        Box(
-            modifier = Modifier
-                .background(
-                    color = if (isNext) islamicGreen.copy(alpha = 0.1f)
-                           else if (isRamadanPrayer) RamadanGold.copy(alpha = 0.1f)
-                           else Color.Transparent,
-                    shape = RoundedCornerShape(6.dp)
-                )
-                .padding(horizontal = 8.dp, vertical = 4.dp)
+        Surface(
+            shape = RoundedCornerShape(8.dp),
+            color = if (isNext) AppTheme.colors.goldAccent.copy(alpha = 0.2f) else Color.Transparent
         ) {
             Text(
                 text = formatPrayerTime(time, language, useIndoArabic),
-                fontSize = 14.sp,
-                fontWeight = if (isNext || isRamadanPrayer) FontWeight.Bold else FontWeight.Medium,
-                color = if (isNext) islamicGreen else if (isRamadanPrayer) RamadanNight else coffeeBrown
+                fontSize = 13.sp,
+                fontWeight = if (isNext) FontWeight.Bold else FontWeight.Medium,
+                color = AppTheme.colors.textPrimary,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
             )
         }
     }

@@ -29,6 +29,7 @@ class QuranMediaBrowserService : MediaBrowserServiceCompat() {
     lateinit var coroutineScope: CoroutineScope
 
     private var lastMetadataMediaId: String? = null
+    private var mediaControllerFuture: com.google.common.util.concurrent.ListenableFuture<androidx.media3.session.MediaController>? = null
 
     companion object {
         const val MEDIA_ROOT_ID = "root"
@@ -62,18 +63,19 @@ class QuranMediaBrowserService : MediaBrowserServiceCompat() {
         val sessionCompat = android.support.v4.media.session.MediaSessionCompat(this, "QuranMediaBrowserService")
 
         // Set up a connection to the main Media3 service
-        val mediaController = androidx.media3.session.MediaController.Builder(
+        val controllerFuture = androidx.media3.session.MediaController.Builder(
             this,
             androidx.media3.session.SessionToken(
                 this,
                 android.content.ComponentName(this, com.quranmedia.player.media.service.QuranMediaService::class.java)
             )
         ).buildAsync()
+        mediaControllerFuture = controllerFuture
 
-        mediaController.addListener(
+        controllerFuture.addListener(
             {
                 // Once connected, proxy playback commands to the Media3 controller
-                val controller = mediaController.get()
+                val controller = controllerFuture.get()
 
                 // Listen to player state changes and update compat session
                 controller.addListener(object : androidx.media3.common.Player.Listener {
@@ -390,6 +392,15 @@ class QuranMediaBrowserService : MediaBrowserServiceCompat() {
     }
 
     override fun onDestroy() {
+        mediaControllerFuture?.let { future ->
+            if (future.isDone && !future.isCancelled) {
+                try {
+                    future.get().release()
+                } catch (_: Exception) { }
+            }
+            future.cancel(false)
+        }
+        mediaControllerFuture = null
         super.onDestroy()
         Timber.d("QuranMediaBrowserService destroyed")
     }

@@ -56,14 +56,10 @@ import com.quranmedia.player.data.repository.ReminderInterval
 import com.quranmedia.player.data.source.FontDownloadProgress
 import com.quranmedia.player.data.source.FontDownloadState
 import com.quranmedia.player.presentation.screens.reader.components.scheherazadeFont
+import com.quranmedia.player.presentation.theme.AppTheme
 import com.quranmedia.player.presentation.theme.ReadingThemes
 import com.quranmedia.player.presentation.util.Strings
 import com.quranmedia.player.presentation.util.layoutDirection
-
-private val islamicGreen = Color(0xFF2E7D32)
-private val lightGreen = Color(0xFF66BB6A)
-private val darkGreen = Color(0xFF1B5E20)
-private val creamBackground = Color(0xFFFAF8F3)
 
 enum class ColorPickerType {
     BACKGROUND, TEXT, HEADER
@@ -111,16 +107,16 @@ fun SettingsScreen(
                         .shadow(
                             elevation = 10.dp,
                             shape = RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp),
-                            ambientColor = darkGreen.copy(alpha = 0.4f),
-                            spotColor = darkGreen.copy(alpha = 0.4f)
+                            ambientColor = AppTheme.colors.darkGreen.copy(alpha = 0.4f),
+                            spotColor = AppTheme.colors.darkGreen.copy(alpha = 0.4f)
                         )
                         .clip(RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp))
                         .background(
                             Brush.verticalGradient(
                                 colors = listOf(
-                                    Color(0xFF1B5E20),
-                                    Color(0xFF2E7D32),
-                                    Color(0xFF388E3C)
+                                    AppTheme.colors.headerGradientStart,
+                                    AppTheme.colors.headerGradientMid,
+                                    AppTheme.colors.headerGradientEnd
                                 )
                             )
                         )
@@ -136,7 +132,7 @@ fun SettingsScreen(
                             Icon(
                                 Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
-                                tint = Color.White
+                                tint = AppTheme.colors.textOnHeader
                             )
                         }
                         Text(
@@ -144,13 +140,13 @@ fun SettingsScreen(
                             fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = AppTheme.colors.textOnHeader
                         )
                         Spacer(modifier = Modifier.size(48.dp)) // Balance the back button
                     }
                 }
             },
-            containerColor = creamBackground
+            containerColor = AppTheme.colors.screenBackground
         ) { paddingValues ->
             Column(
                 modifier = Modifier
@@ -244,7 +240,7 @@ fun SettingsScreen(
                     if (settings.readingReminderEnabled) {
                         HorizontalDivider(
                             modifier = Modifier.padding(vertical = 8.dp),
-                            color = Color.Gray.copy(alpha = 0.2f)
+                            color = AppTheme.colors.divider
                         )
 
                         SettingsClickableItem(
@@ -257,7 +253,7 @@ fun SettingsScreen(
 
                         HorizontalDivider(
                             modifier = Modifier.padding(vertical = 8.dp),
-                            color = Color.Gray.copy(alpha = 0.2f)
+                            color = AppTheme.colors.divider
                         )
 
                         // Quiet hours
@@ -280,7 +276,7 @@ fun SettingsScreen(
                                 "No reminders will be sent during quiet hours",
                             fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                             fontSize = 12.sp,
-                            color = Color.Gray,
+                            color = AppTheme.colors.textSecondary,
                             modifier = Modifier.padding(start = 52.dp, top = 4.dp)
                         )
                     }
@@ -297,7 +293,7 @@ fun SettingsScreen(
                         fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
-                        color = islamicGreen,
+                        color = AppTheme.colors.islamicGreen,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
 
@@ -319,13 +315,13 @@ fun SettingsScreen(
                             "Download Tajweed font to display Tajweed colors. Select Tajweed theme from Reading Theme.",
                         fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                         fontSize = 11.sp,
-                        color = Color.Gray,
+                        color = AppTheme.colors.textSecondary,
                         modifier = Modifier.padding(top = 8.dp)
                     )
 
                     HorizontalDivider(
                         modifier = Modifier.padding(vertical = 8.dp),
-                        color = Color.Gray.copy(alpha = 0.2f)
+                        color = AppTheme.colors.divider
                     )
 
                     SettingsSwitchItem(
@@ -342,7 +338,7 @@ fun SettingsScreen(
 
                     HorizontalDivider(
                         modifier = Modifier.padding(vertical = 8.dp),
-                        color = Color.Gray.copy(alpha = 0.2f)
+                        color = AppTheme.colors.divider
                     )
 
                     // Keep screen on
@@ -380,7 +376,7 @@ fun SettingsScreen(
                     if (settings.reciteRealTimeAssessment) {
                         HorizontalDivider(
                             modifier = Modifier.padding(vertical = 8.dp),
-                            color = Color.Gray.copy(alpha = 0.2f)
+                            color = AppTheme.colors.divider
                         )
 
                         SettingsSwitchItem(
@@ -403,7 +399,7 @@ fun SettingsScreen(
                             "Normal mode: Full recording then show results\nReal-time mode: Assess each ayah separately",
                         fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                         fontSize = 12.sp,
-                        color = Color.Gray,
+                        color = AppTheme.colors.textSecondary,
                         modifier = Modifier.padding(start = 52.dp, top = 8.dp)
                     )
                 }
@@ -438,7 +434,7 @@ fun SettingsScreen(
                             "Language will be applied immediately to the entire app",
                         fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                         fontSize = 11.sp,
-                        color = Color.Gray,
+                        color = AppTheme.colors.textSecondary,
                         modifier = Modifier.padding(start = 8.dp, top = 4.dp)
                     )
                 }
@@ -517,11 +513,11 @@ private fun SettingsSection(
             .shadow(
                 elevation = 6.dp,
                 shape = RoundedCornerShape(14.dp),
-                ambientColor = islamicGreen.copy(alpha = 0.2f),
-                spotColor = islamicGreen.copy(alpha = 0.2f)
+                ambientColor = AppTheme.colors.islamicGreen.copy(alpha = 0.2f),
+                spotColor = AppTheme.colors.islamicGreen.copy(alpha = 0.2f)
             ),
         shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = AppTheme.colors.cardBackground),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
@@ -530,8 +526,8 @@ private fun SettingsSection(
                 .background(
                     Brush.horizontalGradient(
                         colors = listOf(
-                            islamicGreen.copy(alpha = 0.05f),
-                            Color.White
+                            AppTheme.colors.islamicGreen.copy(alpha = 0.05f),
+                            AppTheme.colors.cardBackground
                         )
                     )
                 )
@@ -542,7 +538,7 @@ private fun SettingsSection(
                 fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
-                color = islamicGreen,
+                color = AppTheme.colors.islamicGreen,
                 modifier = Modifier.padding(bottom = 10.dp)
             )
             content()
@@ -574,8 +570,8 @@ private fun SettingsSwitchItem(
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            lightGreen.copy(alpha = 0.2f),
-                            islamicGreen.copy(alpha = 0.15f)
+                            AppTheme.colors.lightGreen.copy(alpha = 0.2f),
+                            AppTheme.colors.islamicGreen.copy(alpha = 0.15f)
                         )
                     )
                 ),
@@ -584,7 +580,7 @@ private fun SettingsSwitchItem(
             Icon(
                 icon,
                 contentDescription = null,
-                tint = islamicGreen,
+                tint = AppTheme.colors.islamicGreen,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -597,13 +593,13 @@ private fun SettingsSwitchItem(
                 fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
-                color = Color.Black
+                color = AppTheme.colors.textPrimary
             )
             Text(
                 text = subtitle,
                 fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                 fontSize = 11.sp,
-                color = Color.Gray,
+                color = AppTheme.colors.textSecondary,
                 maxLines = 1
             )
         }
@@ -613,9 +609,9 @@ private fun SettingsSwitchItem(
             onCheckedChange = onCheckedChange,
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.White,
-                checkedTrackColor = islamicGreen,
+                checkedTrackColor = AppTheme.colors.islamicGreen,
                 uncheckedThumbColor = Color.White,
-                uncheckedTrackColor = Color.Gray.copy(alpha = 0.3f)
+                uncheckedTrackColor = AppTheme.colors.border
             )
         )
     }
@@ -644,8 +640,8 @@ private fun SettingsClickableItem(
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            lightGreen.copy(alpha = 0.2f),
-                            islamicGreen.copy(alpha = 0.15f)
+                            AppTheme.colors.lightGreen.copy(alpha = 0.2f),
+                            AppTheme.colors.islamicGreen.copy(alpha = 0.15f)
                         )
                     )
                 ),
@@ -654,7 +650,7 @@ private fun SettingsClickableItem(
             Icon(
                 icon,
                 contentDescription = null,
-                tint = islamicGreen,
+                tint = AppTheme.colors.islamicGreen,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -667,13 +663,13 @@ private fun SettingsClickableItem(
                 fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
-                color = Color.Black
+                color = AppTheme.colors.textPrimary
             )
             Text(
                 text = subtitle,
                 fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                 fontSize = 11.sp,
-                color = islamicGreen,
+                color = AppTheme.colors.islamicGreen,
                 maxLines = 1
             )
         }
@@ -681,7 +677,7 @@ private fun SettingsClickableItem(
         Icon(
             if (language == AppLanguage.ARABIC) Icons.Default.ChevronLeft else Icons.Default.ChevronRight,
             contentDescription = null,
-            tint = Color.Gray,
+            tint = AppTheme.colors.iconDefault,
             modifier = Modifier.size(18.dp)
         )
     }
@@ -696,15 +692,15 @@ private fun IntervalSelectionDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = Color.White,
-        titleContentColor = Color.Black,
-        textContentColor = Color.Black,
+        containerColor = AppTheme.colors.cardBackground,
+        titleContentColor = AppTheme.colors.textPrimary,
+        textContentColor = AppTheme.colors.textPrimary,
         title = {
             Text(
                 text = if (language == AppLanguage.ARABIC) "فترة التذكير" else "Reminder Interval",
                 fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                 fontWeight = FontWeight.Bold,
-                color = islamicGreen
+                color = AppTheme.colors.islamicGreen
             )
         },
         text = {
@@ -715,7 +711,7 @@ private fun IntervalSelectionDialog(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(8.dp))
-                            .background(if (isSelected) islamicGreen.copy(alpha = 0.1f) else Color.Transparent)
+                            .background(if (isSelected) AppTheme.colors.islamicGreen.copy(alpha = 0.1f) else Color.Transparent)
                             .clickable { onIntervalSelected(interval) }
                             .padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -723,14 +719,14 @@ private fun IntervalSelectionDialog(
                         RadioButton(
                             selected = isSelected,
                             onClick = { onIntervalSelected(interval) },
-                            colors = RadioButtonDefaults.colors(selectedColor = islamicGreen)
+                            colors = RadioButtonDefaults.colors(selectedColor = AppTheme.colors.islamicGreen)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = interval.getLabel(language),
                             fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isSelected) darkGreen else Color.Black
+                            color = if (isSelected) AppTheme.colors.darkGreen else AppTheme.colors.textPrimary
                         )
                     }
                 }
@@ -740,7 +736,7 @@ private fun IntervalSelectionDialog(
             TextButton(onClick = onDismiss) {
                 Text(
                     if (language == AppLanguage.ARABIC) "إغلاق" else "Close",
-                    color = islamicGreen
+                    color = AppTheme.colors.islamicGreen
                 )
             }
         }
@@ -760,15 +756,15 @@ private fun QuietHoursDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = Color.White,
-        titleContentColor = Color.Black,
-        textContentColor = Color.Black,
+        containerColor = AppTheme.colors.cardBackground,
+        titleContentColor = AppTheme.colors.textPrimary,
+        textContentColor = AppTheme.colors.textPrimary,
         title = {
             Text(
                 text = if (language == AppLanguage.ARABIC) "ساعات الهدوء" else "Quiet Hours",
                 fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                 fontWeight = FontWeight.Bold,
-                color = islamicGreen
+                color = AppTheme.colors.islamicGreen
             )
         },
         text = {
@@ -780,7 +776,7 @@ private fun QuietHoursDialog(
                         "No reminders will be sent during this period",
                     fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                     fontSize = 14.sp,
-                    color = Color.Gray,
+                    color = AppTheme.colors.textSecondary,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
@@ -789,7 +785,7 @@ private fun QuietHoursDialog(
                     text = if (language == AppLanguage.ARABIC) "من:" else "From:",
                     fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                     fontWeight = FontWeight.Medium,
-                    color = Color.Black
+                    color = AppTheme.colors.textPrimary
                 )
                 HourSelector(
                     selectedHour = selectedStart,
@@ -803,7 +799,7 @@ private fun QuietHoursDialog(
                     text = if (language == AppLanguage.ARABIC) "إلى:" else "To:",
                     fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                     fontWeight = FontWeight.Medium,
-                    color = Color.Black
+                    color = AppTheme.colors.textPrimary
                 )
                 HourSelector(
                     selectedHour = selectedEnd,
@@ -815,7 +811,7 @@ private fun QuietHoursDialog(
             TextButton(onClick = { onHoursSelected(selectedStart, selectedEnd) }) {
                 Text(
                     if (language == AppLanguage.ARABIC) "حفظ" else "Save",
-                    color = islamicGreen
+                    color = AppTheme.colors.islamicGreen
                 )
             }
         },
@@ -823,7 +819,7 @@ private fun QuietHoursDialog(
             TextButton(onClick = onDismiss) {
                 Text(
                     if (language == AppLanguage.ARABIC) "إلغاء" else "Cancel",
-                    color = Color.Gray
+                    color = AppTheme.colors.textSecondary
                 )
             }
         }
@@ -852,14 +848,14 @@ private fun HourSelector(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
                     .clickable { onHourSelected(hour) },
-                color = if (isSelected) islamicGreen else Color.Gray.copy(alpha = 0.1f)
+                color = if (isSelected) AppTheme.colors.islamicGreen else AppTheme.colors.chipBackground
             ) {
                 Text(
                     text = formatHour(hour),
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                     fontSize = 14.sp,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                    color = if (isSelected) Color.White else Color.Black
+                    color = if (isSelected) AppTheme.colors.textOnPrimary else AppTheme.colors.textPrimary
                 )
             }
         }
@@ -888,11 +884,11 @@ private fun ThemeChipCompact(
         modifier = Modifier
             .clip(RoundedCornerShape(8.dp))
             .clickable(onClick = onClick),
-        color = if (isSelected) themeColors.accent else themeColors.background,
+        color = if (isSelected) themeColors.accent else AppTheme.colors.chipBackground,
         shape = RoundedCornerShape(8.dp),
         border = androidx.compose.foundation.BorderStroke(
             width = if (isSelected) 2.dp else 1.dp,
-            color = if (isSelected) themeColors.accent else Color.Gray.copy(alpha = 0.3f)
+            color = if (isSelected) themeColors.accent else AppTheme.colors.border
         )
     ) {
         Row(
@@ -900,12 +896,16 @@ private fun ThemeChipCompact(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            // Small color indicator
+            // Small swatch showing the actual theme background color
             Box(
                 modifier = Modifier
                     .size(16.dp)
                     .clip(RoundedCornerShape(4.dp))
-                    .background(if (isSelected) Color.White.copy(alpha = 0.3f) else themeColors.textPrimary.copy(alpha = 0.2f))
+                    .background(if (isSelected) AppTheme.colors.textOnPrimary.copy(alpha = 0.3f) else themeColors.background)
+                    .then(
+                        if (!isSelected) Modifier.border(0.5.dp, AppTheme.colors.border, RoundedCornerShape(4.dp))
+                        else Modifier
+                    )
             )
 
             Text(
@@ -913,7 +913,7 @@ private fun ThemeChipCompact(
                 fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                 fontSize = 12.sp,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                color = if (isSelected) Color.White else themeColors.textPrimary
+                color = if (isSelected) AppTheme.colors.textOnPrimary else AppTheme.colors.textPrimary
             )
         }
     }
@@ -938,7 +938,7 @@ private fun CustomThemeColorPickers(
             fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
             fontSize = 13.sp,
             fontWeight = FontWeight.Medium,
-            color = islamicGreen
+            color = AppTheme.colors.islamicGreen
         )
 
         // Background color
@@ -987,7 +987,7 @@ private fun ColorPickerRow(
             text = label,
             fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
             fontSize = 13.sp,
-            color = Color.Black
+            color = AppTheme.colors.textPrimary
         )
 
         Box(
@@ -995,7 +995,7 @@ private fun ColorPickerRow(
                 .size(32.dp)
                 .clip(CircleShape)
                 .background(color)
-                .border(1.dp, Color.Gray.copy(alpha = 0.3f), CircleShape)
+                .border(1.dp, AppTheme.colors.border, CircleShape)
         )
     }
 }
@@ -1090,7 +1090,7 @@ private fun LanguageOption(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
-            .background(if (isSelected) islamicGreen.copy(alpha = 0.1f) else Color.Transparent)
+            .background(if (isSelected) AppTheme.colors.islamicGreen.copy(alpha = 0.1f) else Color.Transparent)
             .clickable { onClick() }
             .padding(vertical = 10.dp, horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -1104,13 +1104,13 @@ private fun LanguageOption(
                     Brush.verticalGradient(
                         colors = if (isSelected) {
                             listOf(
-                                lightGreen.copy(alpha = 0.3f),
-                                islamicGreen.copy(alpha = 0.2f)
+                                AppTheme.colors.lightGreen.copy(alpha = 0.3f),
+                                AppTheme.colors.islamicGreen.copy(alpha = 0.2f)
                             )
                         } else {
                             listOf(
-                                lightGreen.copy(alpha = 0.1f),
-                                islamicGreen.copy(alpha = 0.05f)
+                                AppTheme.colors.lightGreen.copy(alpha = 0.1f),
+                                AppTheme.colors.islamicGreen.copy(alpha = 0.05f)
                             )
                         }
                     )
@@ -1120,7 +1120,7 @@ private fun LanguageOption(
             Icon(
                 Icons.Default.Language,
                 contentDescription = null,
-                tint = if (isSelected) islamicGreen else Color.Gray,
+                tint = if (isSelected) AppTheme.colors.islamicGreen else AppTheme.colors.iconDefault,
                 modifier = Modifier.size(22.dp)
             )
         }
@@ -1136,7 +1136,7 @@ private fun LanguageOption(
                 fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                 fontSize = 15.sp,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                color = if (isSelected) darkGreen else Color.Black
+                color = if (isSelected) AppTheme.colors.darkGreen else AppTheme.colors.textPrimary
             )
             Text(
                 text = when (language) {
@@ -1145,7 +1145,7 @@ private fun LanguageOption(
                 },
                 fontFamily = if (currentLanguage == AppLanguage.ARABIC) scheherazadeFont else null,
                 fontSize = 11.sp,
-                color = Color.Gray
+                color = AppTheme.colors.textSecondary
             )
         }
 
@@ -1154,7 +1154,7 @@ private fun LanguageOption(
             Icon(
                 Icons.Default.CheckCircle,
                 contentDescription = null,
-                tint = islamicGreen,
+                tint = AppTheme.colors.islamicGreen,
                 modifier = Modifier.size(24.dp)
             )
         }
@@ -1180,7 +1180,7 @@ private fun FontDownloadItem(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isDownloaded) lightGreen.copy(alpha = 0.1f) else Color.Gray.copy(alpha = 0.05f)
+            containerColor = if (isDownloaded) AppTheme.colors.lightGreen.copy(alpha = 0.1f) else AppTheme.colors.chipBackground
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
@@ -1200,7 +1200,7 @@ private fun FontDownloadItem(
                         fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
-                        color = Color.Black
+                        color = AppTheme.colors.textPrimary
                     )
                     Text(
                         text = when {
@@ -1218,9 +1218,9 @@ private fun FontDownloadItem(
                         fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                         fontSize = 11.sp,
                         color = when {
-                            isDownloaded -> islamicGreen
+                            isDownloaded -> AppTheme.colors.islamicGreen
                             hasError -> Color.Red
-                            else -> Color.Gray
+                            else -> AppTheme.colors.textSecondary
                         }
                     )
                 }
@@ -1230,7 +1230,7 @@ private fun FontDownloadItem(
                     isDownloading -> {
                         CircularProgressIndicator(
                             modifier = Modifier.size(24.dp),
-                            color = islamicGreen,
+                            color = AppTheme.colors.islamicGreen,
                             strokeWidth = 2.dp
                         )
                     }
@@ -1251,7 +1251,7 @@ private fun FontDownloadItem(
                         Button(
                             onClick = onDownload,
                             modifier = Modifier.height(32.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = islamicGreen),
+                            colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.islamicGreen),
                             contentPadding = androidx.compose.foundation.layout.PaddingValues(
                                 horizontal = 12.dp,
                                 vertical = 0.dp
@@ -1261,13 +1261,13 @@ private fun FontDownloadItem(
                                 Icons.Default.Download,
                                 contentDescription = null,
                                 modifier = Modifier.size(16.dp),
-                                tint = Color.White
+                                tint = AppTheme.colors.textOnPrimary
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = if (language == AppLanguage.ARABIC) "تحميل" else "Download",
                                 fontSize = 12.sp,
-                                color = Color.White
+                                color = AppTheme.colors.textOnPrimary
                             )
                         }
                     }
@@ -1283,8 +1283,8 @@ private fun FontDownloadItem(
                         .fillMaxWidth()
                         .height(4.dp)
                         .clip(RoundedCornerShape(2.dp)),
-                    color = islamicGreen,
-                    trackColor = Color.Gray.copy(alpha = 0.2f)
+                    color = AppTheme.colors.islamicGreen,
+                    trackColor = AppTheme.colors.divider
                 )
             }
         }

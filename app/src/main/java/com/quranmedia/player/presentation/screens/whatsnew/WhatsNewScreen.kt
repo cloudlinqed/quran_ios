@@ -31,10 +31,7 @@ import com.quranmedia.player.data.repository.PrayerNotificationMode
 import com.quranmedia.player.data.source.FontDownloadState
 import com.quranmedia.player.domain.model.CalculationMethod
 import com.quranmedia.player.presentation.screens.reader.components.scheherazadeFont
-import com.quranmedia.player.presentation.screens.reader.components.islamicGreen
-import com.quranmedia.player.presentation.screens.reader.components.darkGreen
-import com.quranmedia.player.presentation.screens.reader.components.goldAccent
-import com.quranmedia.player.presentation.screens.reader.components.creamBackground
+import com.quranmedia.player.presentation.theme.AppTheme
 import com.quranmedia.player.presentation.util.layoutDirection
 
 // WhatsNew-specific light green for backgrounds (lighter than shared lightGreen)
@@ -72,7 +69,7 @@ fun WhatsNewScreen(
 
     CompositionLocalProvider(LocalLayoutDirection provides language.layoutDirection()) {
         Scaffold(
-            containerColor = creamBackground
+            containerColor = AppTheme.colors.screenBackground
         ) { padding ->
             LazyColumn(
                 modifier = Modifier
@@ -215,7 +212,7 @@ private fun WhatsNewHeader(
                 .clip(RoundedCornerShape(16.dp))
                 .background(
                     Brush.linearGradient(
-                        listOf(islamicGreen, darkGreen)
+                        listOf(AppTheme.colors.islamicGreen, AppTheme.colors.darkGreen)
                     )
                 ),
             contentAlignment = Alignment.Center
@@ -224,7 +221,7 @@ private fun WhatsNewHeader(
                 imageVector = Icons.Default.MenuBook,
                 contentDescription = null,
                 modifier = Modifier.size(48.dp),
-                tint = Color.White
+                tint = AppTheme.colors.textOnHeader
             )
         }
 
@@ -240,7 +237,7 @@ private fun WhatsNewHeader(
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
-            color = darkGreen,
+            color = AppTheme.colors.darkGreen,
             textAlign = TextAlign.Center
         )
 
@@ -258,7 +255,7 @@ private fun WhatsNewHeader(
                     else "Version 2",
                 fontSize = 14.sp,
                 fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
-                color = darkGreen,
+                color = AppTheme.colors.darkGreen,
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
             )
         }
@@ -275,7 +272,7 @@ private fun FeatureHighlightsSection(
             .fillMaxWidth()
             .padding(vertical = 8.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = AppTheme.colors.cardBackground),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
@@ -286,7 +283,7 @@ private fun FeatureHighlightsSection(
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
-                color = islamicGreen
+                color = AppTheme.colors.islamicGreen
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -327,7 +324,7 @@ private fun FeatureItem(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = islamicGreen,
+                tint = AppTheme.colors.islamicGreen,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -338,13 +335,13 @@ private fun FeatureItem(
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
                 fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
-                color = darkGreen
+                color = AppTheme.colors.darkGreen
             )
             Text(
                 text = description,
                 fontSize = 12.sp,
                 fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
-                color = Color.Gray,
+                color = AppTheme.colors.textSecondary,
                 lineHeight = 16.sp,
                 modifier = Modifier.padding(top = 2.dp)
             )
@@ -365,7 +362,7 @@ private fun PermissionCard(
             .fillMaxWidth()
             .padding(vertical = 8.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = AppTheme.colors.cardBackground),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -385,7 +382,7 @@ private fun PermissionCard(
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = islamicGreen,
+                    tint = AppTheme.colors.islamicGreen,
                     modifier = Modifier.size(28.dp)
                 )
             }
@@ -396,20 +393,20 @@ private fun PermissionCard(
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
                     fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
-                    color = darkGreen
+                    color = AppTheme.colors.darkGreen
                 )
                 Text(
                     text = description,
                     fontSize = 14.sp,
                     fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
-                    color = Color.Gray,
+                    color = AppTheme.colors.textSecondary,
                     modifier = Modifier.padding(top = 4.dp)
                 )
             }
 
             Button(
                 onClick = onRequestPermission,
-                colors = ButtonDefaults.buttonColors(containerColor = islamicGreen),
+                colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.islamicGreen),
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Text(
@@ -437,7 +434,7 @@ private fun PrayerMethodSection(
             .fillMaxWidth()
             .padding(vertical = 8.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = AppTheme.colors.cardBackground),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
@@ -457,7 +454,7 @@ private fun PrayerMethodSection(
                     Icon(
                         imageVector = Icons.Default.Schedule,
                         contentDescription = null,
-                        tint = islamicGreen,
+                        tint = AppTheme.colors.islamicGreen,
                         modifier = Modifier.size(28.dp)
                     )
                 }
@@ -470,7 +467,7 @@ private fun PrayerMethodSection(
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
-                        color = darkGreen
+                        color = AppTheme.colors.darkGreen
                     )
                     Text(
                         text = if (language == AppLanguage.ARABIC)
@@ -478,7 +475,7 @@ private fun PrayerMethodSection(
                             else "Choose the method for your region",
                         fontSize = 14.sp,
                         fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
-                        color = Color.Gray,
+                        color = AppTheme.colors.textSecondary,
                         modifier = Modifier.padding(top = 4.dp)
                     )
                 }
@@ -507,8 +504,8 @@ private fun PrayerMethodSection(
                         )
                     },
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = islamicGreen,
-                        unfocusedBorderColor = Color.Gray
+                        focusedBorderColor = AppTheme.colors.islamicGreen,
+                        unfocusedBorderColor = AppTheme.colors.border
                     ),
                     shape = RoundedCornerShape(8.dp)
                 )
@@ -550,7 +547,7 @@ private fun PrayerNotificationModeSection(
             .fillMaxWidth()
             .padding(vertical = 8.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = AppTheme.colors.cardBackground),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
@@ -570,7 +567,7 @@ private fun PrayerNotificationModeSection(
                     Icon(
                         imageVector = Icons.Default.Notifications,
                         contentDescription = null,
-                        tint = islamicGreen,
+                        tint = AppTheme.colors.islamicGreen,
                         modifier = Modifier.size(28.dp)
                     )
                 }
@@ -583,7 +580,7 @@ private fun PrayerNotificationModeSection(
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
-                        color = darkGreen
+                        color = AppTheme.colors.darkGreen
                     )
                     Text(
                         text = if (language == AppLanguage.ARABIC)
@@ -591,7 +588,7 @@ private fun PrayerNotificationModeSection(
                             else "Choose how you want to be notified for all prayers",
                         fontSize = 14.sp,
                         fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
-                        color = Color.Gray,
+                        color = AppTheme.colors.textSecondary,
                         modifier = Modifier.padding(top = 4.dp)
                     )
                 }
@@ -622,7 +619,7 @@ private fun PrayerNotificationModeSection(
                                     },
                                     contentDescription = null,
                                     modifier = Modifier.size(20.dp),
-                                    tint = if (isSelected) Color.White else islamicGreen
+                                    tint = if (isSelected) AppTheme.colors.textOnPrimary else AppTheme.colors.islamicGreen
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
@@ -634,9 +631,9 @@ private fun PrayerNotificationModeSection(
                             }
                         },
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = islamicGreen,
-                            selectedLabelColor = Color.White,
-                            containerColor = Color.Gray.copy(alpha = 0.1f)
+                            selectedContainerColor = AppTheme.colors.islamicGreen,
+                            selectedLabelColor = AppTheme.colors.textOnPrimary,
+                            containerColor = AppTheme.colors.chipBackground
                         ),
                         modifier = Modifier.weight(1f)
                     )
@@ -660,7 +657,7 @@ private fun PrayerNotificationModeSection(
                     },
                     fontSize = 12.sp,
                     fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
-                    color = islamicGreen,
+                    color = AppTheme.colors.islamicGreen,
                     modifier = Modifier.padding(horizontal = 4.dp)
                 )
             }
@@ -685,9 +682,9 @@ private fun WhatsNewActions(
             modifier = Modifier.weight(1f),
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.outlinedButtonColors(
-                contentColor = islamicGreen
+                contentColor = AppTheme.colors.islamicGreen
             ),
-            border = androidx.compose.foundation.BorderStroke(1.dp, islamicGreen)
+            border = androidx.compose.foundation.BorderStroke(1.dp, AppTheme.colors.islamicGreen)
         ) {
             Text(
                 text = if (language == AppLanguage.ARABIC) "تخطي" else "Skip",
@@ -702,7 +699,7 @@ private fun WhatsNewActions(
             modifier = Modifier.weight(1f),
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = islamicGreen
+                containerColor = AppTheme.colors.islamicGreen
             )
         ) {
             Text(
@@ -827,7 +824,7 @@ private fun LanguageToggle(
     ) {
         TextButton(
             onClick = onToggle,
-            colors = ButtonDefaults.textButtonColors(contentColor = islamicGreen)
+            colors = ButtonDefaults.textButtonColors(contentColor = AppTheme.colors.islamicGreen)
         ) {
             Icon(
                 imageVector = Icons.Default.Language,
@@ -858,7 +855,7 @@ private fun MushafFontDownloadSection(
             .fillMaxWidth()
             .padding(vertical = 8.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = AppTheme.colors.cardBackground),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
@@ -878,7 +875,7 @@ private fun MushafFontDownloadSection(
                     Icon(
                         imageVector = Icons.Default.Download,
                         contentDescription = null,
-                        tint = islamicGreen,
+                        tint = AppTheme.colors.islamicGreen,
                         modifier = Modifier.size(28.dp)
                     )
                 }
@@ -891,7 +888,7 @@ private fun MushafFontDownloadSection(
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
-                        color = darkGreen
+                        color = AppTheme.colors.darkGreen
                     )
                     Text(
                         text = if (language == AppLanguage.ARABIC)
@@ -899,7 +896,7 @@ private fun MushafFontDownloadSection(
                         else "For the best Quran reading experience",
                         fontSize = 14.sp,
                         fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
-                        color = Color.Gray,
+                        color = AppTheme.colors.textSecondary,
                         modifier = Modifier.padding(top = 4.dp)
                     )
                 }
@@ -937,7 +934,7 @@ private fun MushafFontDownloadSection(
                 else "You can skip this and download fonts later from Settings",
                 fontSize = 12.sp,
                 fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
-                color = Color.Gray,
+                color = AppTheme.colors.textSecondary,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -958,7 +955,7 @@ private fun FontDownloadItem(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
-            .background(if (isDownloaded) lightGreen.copy(alpha = 0.5f) else Color.Gray.copy(alpha = 0.1f))
+            .background(if (isDownloaded) lightGreen.copy(alpha = 0.5f) else AppTheme.colors.chipBackground)
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -969,19 +966,19 @@ private fun FontDownloadItem(
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
-                    color = darkGreen
+                    color = AppTheme.colors.darkGreen
                 )
                 // Show "Completed" badge when downloaded
                 if (isDownloaded) {
                     Spacer(modifier = Modifier.width(8.dp))
                     Surface(
                         shape = RoundedCornerShape(4.dp),
-                        color = islamicGreen.copy(alpha = 0.2f)
+                        color = AppTheme.colors.islamicGreen.copy(alpha = 0.2f)
                     ) {
                         Text(
                             text = if (language == AppLanguage.ARABIC) "مكتمل" else "Completed",
                             fontSize = 10.sp,
-                            color = islamicGreen,
+                            color = AppTheme.colors.islamicGreen,
                             fontWeight = FontWeight.Medium,
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                         )
@@ -993,7 +990,7 @@ private fun FontDownloadItem(
                     if (language == AppLanguage.ARABIC) "تم التحميل بنجاح ✓" else "Downloaded successfully ✓"
                 } else size,
                 fontSize = 12.sp,
-                color = if (isDownloaded) islamicGreen else Color.Gray
+                color = if (isDownloaded) AppTheme.colors.islamicGreen else AppTheme.colors.textSecondary
             )
 
             // Show progress if downloading
@@ -1005,13 +1002,13 @@ private fun FontDownloadItem(
                         .fillMaxWidth()
                         .height(4.dp)
                         .clip(RoundedCornerShape(2.dp)),
-                    color = islamicGreen,
-                    trackColor = Color.Gray.copy(alpha = 0.2f)
+                    color = AppTheme.colors.islamicGreen,
+                    trackColor = AppTheme.colors.divider
                 )
                 Text(
                     text = "${(progress.progress * 100).toInt()}%",
                     fontSize = 10.sp,
-                    color = Color.Gray
+                    color = AppTheme.colors.textSecondary
                 )
             }
         }
@@ -1021,14 +1018,14 @@ private fun FontDownloadItem(
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
                     contentDescription = "Downloaded",
-                    tint = islamicGreen,
+                    tint = AppTheme.colors.islamicGreen,
                     modifier = Modifier.size(28.dp)
                 )
             }
             progress.state == FontDownloadState.DOWNLOADING -> {
                 CircularProgressIndicator(
                     modifier = Modifier.size(24.dp),
-                    color = islamicGreen,
+                    color = AppTheme.colors.islamicGreen,
                     strokeWidth = 2.dp
                 )
             }
@@ -1051,7 +1048,7 @@ private fun FontDownloadItem(
             else -> {
                 Button(
                     onClick = onDownload,
-                    colors = ButtonDefaults.buttonColors(containerColor = islamicGreen),
+                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.islamicGreen),
                     shape = RoundedCornerShape(8.dp),
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                 ) {

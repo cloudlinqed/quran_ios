@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ar"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Prayer Times App</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              green: '#2B4234',
+              greenDark: '#1E2E24',
+              greenLight: '#3A5A46',
+              bg: '#F9F5EC',
+              gold: '#D3B378',
+              white: '#FFFFFF',
+              text: '#333333',
+              textMuted: '#666666',
+              highlight: '#F0E6D2'
+            }
+          },
+          fontFamily: {
+            sans: ['Arial', 'sans-serif'], // Placeholder for a nice Arabic font
+          }
+        }
+      }
+    }
+  </script>
+<style data-purpose="custom-styles">
+    /* General body styling for mobile view */
+    body {
+      background-color: #F9F5EC;
+      color: #333333;
+      font-family: 'Arial', sans-serif; /* Adjust font as needed */
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Container to limit width for testing on larger screens */
+    .mobile-container {
+      max-width: 414px; /* iPhone Max width approx */
+      margin: 0 auto;
+      background-color: #F9F5EC;
+      min-height: 100vh;
+      position: relative;
+      padding-bottom: 80px; /* Space for bottom nav */
+    }
+
+    /* Custom scrollbar hiding if needed */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-[#F9F6EE] m-0 p-0">
+<div class="mobile-container overflow-hidden flex flex-col no-scrollbar shadow-xl border-x border-gray-200 bg-[#F9F6EE]">
+<!-- BEGIN: Header -->
+<div class="flex items-center justify-between px-6 py-5 w-full bg-[#1E3329] rounded-none">
+<i class="fas fa-bars text-white text-xl cursor-pointer"></i>
+<h1 class="text-[#D3B378] font-bold text-xl m-0 flex-1 text-center">مواقيت الصلاة</h1>
+<i class="fas fa-arrow-right text-[#D3B378] text-xl cursor-pointer"></i>
+</div>
+<!-- END: Header -->
+<main class="flex-1 px-4 py-6 space-y-4">
+<!-- BEGIN: Date & Location Card -->
+<section class="bg-brand-white rounded-2xl p-4 shadow-sm border border-[#D3B378]/30 flex flex-col space-y-2">
+<div class="flex items-center justify-end text-brand-text font-semibold">
+<span>٣ شوال ١٤٤٧</span>
+<i class="far fa-calendar-alt text-[#D3B378] w-5 h-5 ml-2 text-center text-lg"></i>
+</div>
+<div class="flex items-center justify-end text-sm text-brand-text">
+<span>Makkah, Saudi Arabia</span>
+<i class="fas fa-map-marker-alt text-[#D3B378] w-4 h-4 ml-2 text-center"></i>
+</div>
+</section>
+<!-- END: Date & Location Card -->
+<!-- BEGIN: Next Prayer Card -->
+<section class="bg-[#2B4234] rounded-2xl p-4 text-white shadow-md relative overflow-hidden">
+<!-- Decorative background element could go here -->
+<div class="flex items-center justify-between">
+<!-- Time Remaining Box -->
+<div class="bg-[#3A5344] text-white rounded-xl px-4 py-2 text-center shadow-inner">
+<span class="block text-xs text-brand-gold/80 mb-1">متبقي</span>
+<span class="block font-bold">٢١ س ٢٩ د</span>
+</div>
+<!-- Prayer Info -->
+<div class="text-right flex items-center">
+<div class="ml-4">
+<span class="block text-brand-gold text-sm mb-1">الصلاة القادمة</span>
+<div class="flex items-end justify-end space-x-2 rtl:space-x-reverse">
+<span class="text-3xl font-bold">الفجر</span>
+<span class="text-sm mb-1 text-gray-300">١٠:٠٧ مساءً</span>
+</div>
+</div>
+<!-- Moon Icon -->
+<div class="bg-brand-greenDark p-2 rounded-full">
+<i class="fas fa-moon text-white text-3xl"></i>
+</div>
+</div>
+</div>
+</section>
+<!-- END: Next Prayer Card -->
+<!-- BEGIN: Qibla Direction Card -->
+<section class="bg-[#2B4234] rounded-2xl p-4 flex items-center justify-between shadow-md text-[#D3B378] cursor-pointer">
+<i class="fas fa-arrow-left text-[#D3B378] text-xl"></i>
+<div class="flex items-center">
+<span class="font-bold text-lg mr-2">اتجاه القبلة</span>
+<i class="far fa-compass text-[#D3B378] text-xl"></i>
+</div>
+</section>
+<!-- END: Qibla Direction Card -->
+<!-- BEGIN: Prayer Times List Card -->
+<section class="bg-brand-white rounded-t-3xl rounded-b-xl border border-brand-gold/20 shadow-sm overflow-hidden pb-4">
+<!-- Header -->
+<div class="bg-brand-bg py-3 border-b border-brand-gold/20 flex items-center justify-center space-x-2 rtl:space-x-reverse">
+<i class="fas fa-star-of-life text-[#D3B378] text-xs"></i>
+<h2 class="font-bold text-lg text-brand-text">أوقات الصلاة</h2>
+<i class="fas fa-star-of-life text-[#D3B378] text-xs"></i>
+</div>
+<!-- List -->
+<div class="px-4 py-2 space-y-1">
+<!-- Highlighted Row (Fajr) -->
+<div class="flex items-center justify-between bg-[#EFE6D5] rounded-lg p-3">
+<div class="bg-brand-gold/20 text-brand-text px-3 py-1 rounded-lg text-sm font-semibold">
+               ١٠:٠٧ مساءً
+             </div>
+<div class="flex items-center">
+<span class="font-bold text-lg mr-3">الفجر</span>
+<div class="w-8 h-8 rounded-full bg-[#F3ECE0] flex items-center justify-center shrink-0">
+<i class="fas fa-moon text-[#2B4234] text-lg"></i>
+</div>
+</div>
+</div>
+<!-- Divider -->
+<div class="border-b border-gray-100 mx-2"></div>
+<!-- Row (Sunrise) -->
+<div class="flex items-center justify-between p-3">
+<div class="text-brand-text px-3 py-1 text-sm">
+               ١١:٢٣ مساءً
+             </div>
+<div class="flex items-center">
+<span class="font-bold text-lg mr-3 text-brand-text">الشروق</span>
+<div class="w-8 h-8 rounded-full bg-[#F3ECE0] flex items-center justify-center shrink-0">
+<i class="fas fa-sun text-[#D3B378] text-lg"></i>
+</div>
+</div>
+</div>
+<div class="border-b border-gray-100 mx-2"></div>
+<!-- Row (Dhuhr) -->
+<div class="flex items-center justify-between p-3">
+<div class="text-brand-text px-3 py-1 text-sm">
+               ٥:٢٨ صباحاً
+             </div>
+<div class="flex items-center">
+<span class="font-bold text-lg mr-3 text-brand-text">الظهر</span>
+<div class="w-8 h-8 rounded-full bg-[#F3ECE0] flex items-center justify-center shrink-0">
+<i class="fas fa-sun text-[#D3B378] text-lg"></i>
+</div>
+</div>
+</div>
+<div class="border-b border-gray-100 mx-2"></div>
+<!-- Row (Asr) -->
+<div class="flex items-center justify-between p-3">
+<div class="text-brand-text px-3 py-1 text-sm">
+               ٨:٥٣ صباحاً
+             </div>
+<div class="flex items-center">
+<span class="font-bold text-lg mr-3 text-brand-text">العصر</span>
+<div class="w-8 h-8 rounded-full bg-[#F3ECE0] flex items-center justify-center shrink-0">
+<i class="fas fa-sun text-[#D3B378] text-lg"></i>
+</div>
+</div>
+</div>
+<div class="border-b border-gray-100 mx-2"></div>
+<!-- Row (Maghrib) -->
+<div class="flex items-center justify-between p-3">
+<div class="text-brand-text px-3 py-1 text-sm">
+               ١١:٣٢ صباحاً
+             </div>
+<div class="flex items-center">
+<span class="font-bold text-lg mr-3 text-brand-text">المغرب</span>
+<div class="w-8 h-8 rounded-full bg-[#F3ECE0] flex items-center justify-center shrink-0">
+<i class="fas fa-cloud-sun text-[#D3B378] text-lg"></i>
+</div>
+</div>
+</div>
+<div class="border-b border-gray-100 mx-2"></div>
+<!-- Row (Isha) -->
+<div class="flex items-center justify-between p-3">
+<div class="text-brand-text px-3 py-1 text-sm">
+               ١:٠٢ مساءً
+             </div>
+<div class="flex items-center">
+<span class="font-bold text-lg mr-3 text-brand-text">العشاء</span>
+<div class="w-8 h-8 rounded-full bg-[#F3ECE0] flex items-center justify-center shrink-0">
+<i class="fas fa-moon text-[#2B4234] text-lg"></i>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- END: Prayer Times List Card -->
+</main>
+<!-- BEGIN: Bottom Navigation -->
+<nav class="bg-white border-t border-gray-200 fixed bottom-0 w-full max-w-[414px] px-6 py-2 pb-6 z-20 rounded-t-3xl shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+<ul class="flex justify-between items-center text-xs">
+<!-- Nav Item: More -->
+<li class="flex flex-col items-center cursor-pointer text-[#9CA3AF]">
+<i class="fas fa-ellipsis-h text-xl mb-1"></i>
+<span>المزيد</span>
+</li>
+<!-- Nav Item: Dhikr -->
+<li class="flex flex-col items-center cursor-pointer text-[#9CA3AF]">
+<i class="fas fa-hands-praying text-xl mb-1"></i>
+<span>الأذكار</span>
+</li>
+<!-- Nav Item: Prayer -->
+<li class="flex flex-col items-center cursor-pointer text-[#9CA3AF]">
+<i class="fas fa-person-praying text-xl mb-1"></i>
+<span>الصلاة</span>
+</li>
+<!-- Nav Item: Quran -->
+<li class="flex flex-col items-center cursor-pointer text-[#9CA3AF]">
+<i class="fas fa-book-open text-xl mb-1"></i>
+<span>القرآن</span>
+</li>
+<!-- Nav Item: Home (Active) -->
+<li class="flex flex-col items-center cursor-pointer text-brand-gold">
+<div class="bg-brand-bg p-1.5 rounded-xl mb-1">
+<i class="fas fa-home text-brand-gold text-xl"></i>
+</div>
+<span class="font-bold">الرئيسية</span>
+</li>
+</ul>
+</nav>
+<!-- END: Bottom Navigation -->
+</div>
+</body></html>

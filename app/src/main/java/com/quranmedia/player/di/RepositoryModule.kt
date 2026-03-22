@@ -1,10 +1,12 @@
 package com.quranmedia.player.di
 
 import com.quranmedia.player.data.repository.AthkarRepositoryImpl
+import com.quranmedia.player.data.repository.HadithRepositoryImpl
 import com.quranmedia.player.data.repository.PrayerTimesRepositoryImpl
 import com.quranmedia.player.data.repository.QuranRepositoryImpl
 import com.quranmedia.player.data.repository.SearchRepositoryImpl
 import com.quranmedia.player.domain.repository.AthkarRepository
+import com.quranmedia.player.domain.repository.HadithRepository
 import com.quranmedia.player.domain.repository.PrayerTimesRepository
 import com.quranmedia.player.domain.repository.QuranRepository
 import com.quranmedia.player.domain.repository.SearchRepository
@@ -41,4 +43,10 @@ abstract class RepositoryModule {
     abstract fun bindPrayerTimesRepository(
         prayerTimesRepositoryImpl: PrayerTimesRepositoryImpl
     ): PrayerTimesRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindHadithRepository(
+        hadithRepositoryImpl: HadithRepositoryImpl
+    ): HadithRepository
 }

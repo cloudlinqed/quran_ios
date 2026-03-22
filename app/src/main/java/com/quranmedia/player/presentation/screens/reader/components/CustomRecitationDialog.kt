@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.quranmedia.player.data.repository.AppLanguage
 import com.quranmedia.player.domain.model.CustomRecitationSettings
+import com.quranmedia.player.presentation.theme.AppTheme
 import com.quranmedia.player.domain.model.Reciter
 import com.quranmedia.player.domain.model.RecitationPreset
 import com.quranmedia.player.domain.model.Surah
@@ -79,7 +80,7 @@ fun CustomRecitationDialog(
                     .fillMaxWidth()
                     .padding(12.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
+                colors = CardDefaults.cardColors(containerColor = AppTheme.colors.cardBackground)
             ) {
                 Column(
                     modifier = Modifier
@@ -97,13 +98,13 @@ fun CustomRecitationDialog(
                         text = if (language == AppLanguage.ARABIC) "تلاوة مخصصة" else "Custom Recitation",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        color = AppTheme.colors.textPrimary
                     )
                     IconButton(onClick = onDismiss) {
                         Icon(
                             Icons.Default.Close,
                             contentDescription = if (language == AppLanguage.ARABIC) "إغلاق" else "Close",
-                            tint = Color.Black
+                            tint = AppTheme.colors.textPrimary
                         )
                     }
                 }
@@ -115,7 +116,7 @@ fun CustomRecitationDialog(
                     text = if (language == AppLanguage.ARABIC) "القارئ" else "Reciter",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color.Black
+                    color = AppTheme.colors.textPrimary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
 
@@ -136,17 +137,17 @@ fun CustomRecitationDialog(
                             .menuAnchor(),
                         textStyle = LocalTextStyle.current.copy(fontSize = 13.sp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = Color.White,
-                            unfocusedContainerColor = Color.White,
-                            focusedTextColor = Color.Black,
-                            unfocusedTextColor = Color.Black
+                            focusedContainerColor = AppTheme.colors.surfaceVariant,
+                            unfocusedContainerColor = AppTheme.colors.surfaceVariant,
+                            focusedTextColor = AppTheme.colors.textPrimary,
+                            unfocusedTextColor = AppTheme.colors.textPrimary
                         )
                     )
 
                     ExposedDropdownMenu(
                         expanded = expandedReciter,
                         onDismissRequest = { expandedReciter = false },
-                        modifier = Modifier.background(Color.White)
+                        modifier = Modifier.background(AppTheme.colors.cardBackground)
                     ) {
                         reciters.forEach { reciter ->
                             DropdownMenuItem(
@@ -156,7 +157,7 @@ fun CustomRecitationDialog(
                                             reciter.nameArabic ?: reciter.name
                                         else
                                             reciter.name,
-                                        color = Color.Black,
+                                        color = AppTheme.colors.textPrimary,
                                         fontSize = 13.sp
                                     )
                                 },
@@ -177,7 +178,7 @@ fun CustomRecitationDialog(
                         text = if (language == AppLanguage.ARABIC) "تحميل إعداد محفوظ" else "Load Preset",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color.Black
+                        color = AppTheme.colors.textPrimary
                     )
                     Spacer(modifier = Modifier.height(4.dp))
 
@@ -195,21 +196,21 @@ fun CustomRecitationDialog(
                                 .menuAnchor(),
                             textStyle = LocalTextStyle.current.copy(fontSize = 13.sp),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedContainerColor = Color.White,
-                                unfocusedContainerColor = Color.White,
-                                focusedTextColor = Color.Black,
-                                unfocusedTextColor = Color.Black
+                                focusedContainerColor = AppTheme.colors.surfaceVariant,
+                                unfocusedContainerColor = AppTheme.colors.surfaceVariant,
+                                focusedTextColor = AppTheme.colors.textPrimary,
+                                unfocusedTextColor = AppTheme.colors.textPrimary
                             )
                         )
 
                         ExposedDropdownMenu(
                             expanded = expandedPresets,
                             onDismissRequest = { expandedPresets = false },
-                            modifier = Modifier.background(Color.White)
+                            modifier = Modifier.background(AppTheme.colors.cardBackground)
                         ) {
                             savedPresets.forEach { preset ->
                                 DropdownMenuItem(
-                                    text = { Text(preset.name, color = Color.Black, fontSize = 13.sp) },
+                                    text = { Text(preset.name, color = AppTheme.colors.textPrimary, fontSize = 13.sp) },
                                     onClick = {
                                         startSurahNumber = preset.settings.startSurahNumber
                                         startAyahNumber = preset.settings.startAyahNumber
@@ -232,7 +233,7 @@ fun CustomRecitationDialog(
                     text = if (language == AppLanguage.ARABIC) "بداية" else "Start",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color.Black
+                    color = AppTheme.colors.textPrimary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
 
@@ -253,24 +254,24 @@ fun CustomRecitationDialog(
                                     currentSurah?.nameEnglish ?: "",
                                 onValueChange = {},
                                 readOnly = true,
-                                label = { Text(if (language == AppLanguage.ARABIC) "السورة" else "Surah", color = Color.Black, fontSize = 11.sp) },
+                                label = { Text(if (language == AppLanguage.ARABIC) "السورة" else "Surah", color = AppTheme.colors.textPrimary, fontSize = 11.sp) },
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedStartSurah) },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .menuAnchor(),
                                 textStyle = LocalTextStyle.current.copy(fontSize = 13.sp),
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedContainerColor = Color.White,
-                                    unfocusedContainerColor = Color.White,
-                                    focusedTextColor = Color.Black,
-                                    unfocusedTextColor = Color.Black
+                                    focusedContainerColor = AppTheme.colors.surfaceVariant,
+                                    unfocusedContainerColor = AppTheme.colors.surfaceVariant,
+                                    focusedTextColor = AppTheme.colors.textPrimary,
+                                    unfocusedTextColor = AppTheme.colors.textPrimary
                                 )
                             )
 
                             ExposedDropdownMenu(
                                 expanded = expandedStartSurah,
                                 onDismissRequest = { expandedStartSurah = false },
-                                modifier = Modifier.background(Color.White)
+                                modifier = Modifier.background(AppTheme.colors.cardBackground)
                             ) {
                                 surahs.forEach { surah ->
                                     DropdownMenuItem(
@@ -280,7 +281,7 @@ fun CustomRecitationDialog(
                                                     "${surah.number}. ${surah.nameArabic}"
                                                 else
                                                     "${surah.number}. ${surah.nameEnglish}",
-                                                color = Color.Black,
+                                                color = AppTheme.colors.textPrimary,
                                                 fontSize = 13.sp
                                             )
                                         },
@@ -306,28 +307,28 @@ fun CustomRecitationDialog(
                                 value = startAyahNumber.toString(),
                                 onValueChange = {},
                                 readOnly = true,
-                                label = { Text(if (language == AppLanguage.ARABIC) "الآية" else "Ayah", color = Color.Black, fontSize = 11.sp) },
+                                label = { Text(if (language == AppLanguage.ARABIC) "الآية" else "Ayah", color = AppTheme.colors.textPrimary, fontSize = 11.sp) },
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedStartAyah) },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .menuAnchor(),
                                 textStyle = LocalTextStyle.current.copy(fontSize = 13.sp),
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedContainerColor = Color.White,
-                                    unfocusedContainerColor = Color.White,
-                                    focusedTextColor = Color.Black,
-                                    unfocusedTextColor = Color.Black
+                                    focusedContainerColor = AppTheme.colors.surfaceVariant,
+                                    unfocusedContainerColor = AppTheme.colors.surfaceVariant,
+                                    focusedTextColor = AppTheme.colors.textPrimary,
+                                    unfocusedTextColor = AppTheme.colors.textPrimary
                                 )
                             )
 
                             ExposedDropdownMenu(
                                 expanded = expandedStartAyah,
                                 onDismissRequest = { expandedStartAyah = false },
-                                modifier = Modifier.background(Color.White)
+                                modifier = Modifier.background(AppTheme.colors.cardBackground)
                             ) {
                                 (1..maxAyah).forEach { ayahNum ->
                                     DropdownMenuItem(
-                                        text = { Text(ayahNum.toString(), color = Color.Black, fontSize = 13.sp) },
+                                        text = { Text(ayahNum.toString(), color = AppTheme.colors.textPrimary, fontSize = 13.sp) },
                                         onClick = {
                                             startAyahNumber = ayahNum
                                             if (endAyahNumber < ayahNum) {
@@ -349,7 +350,7 @@ fun CustomRecitationDialog(
                     text = if (language == AppLanguage.ARABIC) "نهاية الآية" else "End Ayah",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color.Black
+                    color = AppTheme.colors.textPrimary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
 
@@ -367,21 +368,21 @@ fun CustomRecitationDialog(
                             .menuAnchor(),
                         textStyle = LocalTextStyle.current.copy(fontSize = 13.sp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = Color.White,
-                            unfocusedContainerColor = Color.White,
-                            focusedTextColor = Color.Black,
-                            unfocusedTextColor = Color.Black
+                            focusedContainerColor = AppTheme.colors.surfaceVariant,
+                            unfocusedContainerColor = AppTheme.colors.surfaceVariant,
+                            focusedTextColor = AppTheme.colors.textPrimary,
+                            unfocusedTextColor = AppTheme.colors.textPrimary
                         )
                     )
 
                     ExposedDropdownMenu(
                         expanded = expandedEndAyah,
                         onDismissRequest = { expandedEndAyah = false },
-                        modifier = Modifier.background(Color.White)
+                        modifier = Modifier.background(AppTheme.colors.cardBackground)
                     ) {
                         (startAyahNumber..maxAyah).forEach { ayahNum ->
                             DropdownMenuItem(
-                                text = { Text(ayahNum.toString(), color = Color.Black, fontSize = 13.sp) },
+                                text = { Text(ayahNum.toString(), color = AppTheme.colors.textPrimary, fontSize = 13.sp) },
                                 onClick = {
                                     endAyahNumber = ayahNum
                                     expandedEndAyah = false
@@ -436,7 +437,7 @@ fun CustomRecitationDialog(
                         onClick = { showPresetDialog = true },
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = Color.Black
+                            contentColor = AppTheme.colors.textPrimary
                         )
                     ) {
                         Text(if (language == AppLanguage.ARABIC) "حفظ الإعداد" else "Save Preset", fontSize = 13.sp)
@@ -459,7 +460,7 @@ fun CustomRecitationDialog(
                         },
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF00897B)
+                            containerColor = AppTheme.colors.teal
                         )
                     ) {
                         Text(if (language == AppLanguage.ARABIC) "بداية" else "Start", fontSize = 13.sp)
@@ -476,19 +477,19 @@ fun CustomRecitationDialog(
 
         AlertDialog(
             onDismissRequest = { showPresetDialog = false },
-            title = { Text(if (language == AppLanguage.ARABIC) "حفظ الإعداد" else "Save Preset", color = Color.Black, fontSize = 16.sp) },
+            title = { Text(if (language == AppLanguage.ARABIC) "حفظ الإعداد" else "Save Preset", color = AppTheme.colors.textPrimary, fontSize = 16.sp) },
             text = {
                 OutlinedTextField(
                     value = presetName,
                     onValueChange = { presetName = it },
-                    label = { Text(if (language == AppLanguage.ARABIC) "اسم الإعداد" else "Preset Name", color = Color.Black, fontSize = 12.sp) },
+                    label = { Text(if (language == AppLanguage.ARABIC) "اسم الإعداد" else "Preset Name", color = AppTheme.colors.textPrimary, fontSize = 12.sp) },
                     modifier = Modifier.fillMaxWidth(),
                     textStyle = LocalTextStyle.current.copy(fontSize = 13.sp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = Color.White,
-                        unfocusedContainerColor = Color.White,
-                        focusedTextColor = Color.Black,
-                        unfocusedTextColor = Color.Black
+                        focusedContainerColor = AppTheme.colors.surfaceVariant,
+                        unfocusedContainerColor = AppTheme.colors.surfaceVariant,
+                        focusedTextColor = AppTheme.colors.textPrimary,
+                        unfocusedTextColor = AppTheme.colors.textPrimary
                     )
                 )
             },
@@ -510,15 +511,15 @@ fun CustomRecitationDialog(
                         }
                     }
                 ) {
-                    Text(if (language == AppLanguage.ARABIC) "حفظ" else "Save", color = Color(0xFF00897B), fontSize = 13.sp)
+                    Text(if (language == AppLanguage.ARABIC) "حفظ" else "Save", color = AppTheme.colors.teal, fontSize = 13.sp)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showPresetDialog = false }) {
-                    Text(if (language == AppLanguage.ARABIC) "إلغاء" else "Cancel", color = Color.Black, fontSize = 13.sp)
+                    Text(if (language == AppLanguage.ARABIC) "إلغاء" else "Cancel", color = AppTheme.colors.textPrimary, fontSize = 13.sp)
                 }
             },
-            containerColor = Color.White
+            containerColor = AppTheme.colors.cardBackground
         )
     }
 }
@@ -537,7 +538,7 @@ private fun CompactCounter(
             text = label,
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
-            color = Color.Black
+            color = AppTheme.colors.textPrimary
         )
         Spacer(modifier = Modifier.height(4.dp))
 
@@ -559,7 +560,7 @@ private fun CompactCounter(
                 Icon(
                     Icons.Default.Remove,
                     contentDescription = if (language == AppLanguage.ARABIC) "-" else "-",
-                    tint = Color(0xFF00897B),
+                    tint = AppTheme.colors.teal,
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -567,7 +568,7 @@ private fun CompactCounter(
             Surface(
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(8.dp),
-                color = Color(0xFFF5F5F5)
+                color = AppTheme.colors.surfaceVariant
             ) {
                 Text(
                     text = if (value == CustomRecitationSettings.UNLIMITED)
@@ -576,7 +577,7 @@ private fun CompactCounter(
                         "$value ${if (language == AppLanguage.ARABIC) "مرات" else "times"}",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
-                    color = Color.Black,
+                    color = AppTheme.colors.textPrimary,
                     modifier = Modifier.padding(vertical = 6.dp),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
@@ -595,7 +596,7 @@ private fun CompactCounter(
                 Icon(
                     Icons.Default.Add,
                     contentDescription = if (language == AppLanguage.ARABIC) "+" else "+",
-                    tint = Color(0xFF00897B),
+                    tint = AppTheme.colors.teal,
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -615,7 +616,7 @@ private fun CompactSpeedControl(
             text = label,
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
-            color = Color.Black
+            color = AppTheme.colors.textPrimary
         )
         Spacer(modifier = Modifier.height(4.dp))
 
@@ -638,9 +639,9 @@ private fun CompactSpeedControl(
                     Icons.Default.Remove,
                     contentDescription = if (language == AppLanguage.ARABIC) "-" else "-",
                     tint = if (speed > CustomRecitationSettings.SPEED_OPTIONS.first())
-                        Color(0xFF00897B)
+                        AppTheme.colors.teal
                     else
-                        Color.Gray,
+                        AppTheme.colors.iconDefault,
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -648,13 +649,13 @@ private fun CompactSpeedControl(
             Surface(
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(8.dp),
-                color = Color(0xFFF5F5F5)
+                color = AppTheme.colors.surfaceVariant
             ) {
                 Text(
                     text = "${speed}x",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
-                    color = Color.Black,
+                    color = AppTheme.colors.textPrimary,
                     modifier = Modifier.padding(vertical = 6.dp),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
@@ -674,9 +675,9 @@ private fun CompactSpeedControl(
                     Icons.Default.Add,
                     contentDescription = if (language == AppLanguage.ARABIC) "+" else "+",
                     tint = if (speed < CustomRecitationSettings.SPEED_OPTIONS.last())
-                        Color(0xFF00897B)
+                        AppTheme.colors.teal
                     else
-                        Color.Gray,
+                        AppTheme.colors.iconDefault,
                     modifier = Modifier.size(18.dp)
                 )
             }

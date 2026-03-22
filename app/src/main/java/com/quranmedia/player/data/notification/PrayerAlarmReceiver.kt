@@ -7,24 +7,13 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.PackageManager
-import android.hardware.Sensor
-import android.hardware.SensorEvent
-import android.hardware.SensorEventListener
-import android.hardware.SensorManager
-import android.media.AudioAttributes
 import android.media.AudioManager
-import android.media.MediaPlayer
 import android.os.Build
-import android.os.Handler
-import android.os.Looper
-import android.os.PowerManager
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.quranmedia.player.R
-import com.quranmedia.player.data.repository.AthanRepository
 import com.quranmedia.player.data.repository.PrayerNotificationMode
 import com.quranmedia.player.data.repository.SettingsRepository
 import com.quranmedia.player.domain.model.PrayerType
@@ -35,7 +24,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.io.File
 import java.time.LocalDate
 import javax.inject.Inject
 
@@ -51,9 +39,6 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
     lateinit var settingsRepository: SettingsRepository
 
     @Inject
-    lateinit var athanRepository: AthanRepository
-
-    @Inject
     lateinit var prayerTimesRepository: com.quranmedia.player.domain.repository.PrayerTimesRepository
 
     @Inject
@@ -64,318 +49,14 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
         const val ACTION_STOP_ATHAN = "com.quranmedia.player.STOP_ATHAN"
         const val EXTRA_PRAYER_TYPE = "prayer_type"
         private const val CHANNEL_ID = "prayer_notifications"
-        private const val CHANNEL_ID_ATHAN = "athan_channel"
         private const val NOTIFICATION_ID_BASE = 2000
-        private const val WAKELOCK_TAG = "AlFurqan:AthanWakeLock"
-
-        // Static MediaPlayer for athan playback
-        @Volatile
-        private var mediaPlayer: MediaPlayer? = null
-
-        // WakeLock to keep CPU running during playback
-        @Volatile
-        private var wakeLock: PowerManager.WakeLock? = null
-
-        // Flip-to-silence sensors
-        @Volatile
-        private var sensorManager: SensorManager? = null
-        @Volatile
-        private var sensorsRegistered = false
-        private var lastZ = 0f
-        private var mainHandler: Handler? = null
-
-        // Store context and notification ID for flip-to-silence dismissal
-        @Volatile
-        private var currentContext: Context? = null
-        @Volatile
-        private var currentNotificationId: Int? = null
-
-        // Track if we've received initial sensor reading (to establish baseline)
-        private var hasInitialReading = false
-        private var flipDetectionEnabled = false
-
-        // Volume change receiver - catches any volume button press
-        private val volumeChangeReceiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context?, intent: Intent?) {
-                if (intent?.action == "android.media.VOLUME_CHANGED_ACTION") {
-                    val isPlaying = try { mediaPlayer?.isPlaying == true } catch (e: Exception) { false }
-                    if (isPlaying) {
-                        Timber.d("Volume button pressed - stopping athan")
-                        stopFallbackAthanAndDismissNotification()
-                    }
-                }
-            }
-        }
-
-        // Screen off receiver - catches power button press
-        private val screenOffReceiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context?, intent: Intent?) {
-                if (intent?.action == Intent.ACTION_SCREEN_OFF) {
-                    val isPlaying = try { mediaPlayer?.isPlaying == true } catch (e: Exception) { false }
-                    if (isPlaying) {
-                        Timber.d("Power button pressed (screen off) - stopping athan")
-                        stopFallbackAthanAndDismissNotification()
-                    }
-                }
-            }
-        }
-
-        @Volatile
-        private var receiversRegistered = false
-
-        // Sensor listener for flip detection
-        private val sensorListener = object : SensorEventListener {
-            override fun onSensorChanged(event: SensorEvent?) {
-                if (event == null) return
-
-                when (event.sensor?.type) {
-                    Sensor.TYPE_ACCELEROMETER -> {
-                        val z = event.values[2]
-
-                        // First reading establishes the baseline
-                        if (!hasInitialReading) {
-                            lastZ = z
-                            hasInitialReading = true
-                            Timber.d("Initial accelerometer reading: z=$z")
-                            // Enable flip detection after a short delay to avoid false triggers
-                            mainHandler?.postDelayed({
-                                flipDetectionEnabled = true
-                                Timber.d("Flip detection now enabled, lastZ=$lastZ")
-                            }, 500)
-                            return
-                        }
-
-                        // Only check for flip if detection is enabled and athan is playing
-                        if (flipDetectionEnabled) {
-                            val player = mediaPlayer
-                            val isPlaying = try {
-                                player?.isPlaying == true
-                            } catch (e: Exception) {
-                                false
-                            }
-
-                            if (isPlaying) {
-                                // Phone is face down when Z axis is significantly negative
-                                // Z < -7 means gravity is pulling "up" relative to screen = face down
-                                if (z < -7f && lastZ >= -7f) {
-                                    Timber.d("Phone flipped face down (z=$z, lastZ=$lastZ) - stopping athan")
-                                    flipDetectionEnabled = false  // Prevent multiple triggers
-                                    stopFallbackAthanAndDismissNotification()
-                                }
-                            }
-                        }
-                        lastZ = z
-                    }
-                    Sensor.TYPE_PROXIMITY -> {
-                        if (!flipDetectionEnabled) return
-
-                        val player = mediaPlayer
-                        val isPlaying = try {
-                            player?.isPlaying == true
-                        } catch (e: Exception) {
-                            false
-                        }
-
-                        if (isPlaying) {
-                            val distance = event.values[0]
-                            val maxRange = event.sensor.maximumRange
-                            // Near = face down on surface or in pocket
-                            val isNear = distance < maxRange * 0.5f
-                            if (isNear && kotlin.math.abs(lastZ) < 3f) {
-                                // Phone is flat and proximity sensor triggered = lying face down
-                                Timber.d("Proximity triggered while flat (dist=$distance, lastZ=$lastZ) - stopping athan")
-                                flipDetectionEnabled = false  // Prevent multiple triggers
-                                stopFallbackAthanAndDismissNotification()
-                            }
-                        }
-                    }
-                }
-            }
-
-            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
-        }
-
-        private fun stopFallbackAthanAndDismissNotification() {
-            stopFallbackAthan()
-            // Dismiss notification
-            currentContext?.let { ctx ->
-                currentNotificationId?.let { id ->
-                    try {
-                        val notificationManager = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                        notificationManager.cancel(id)
-                        Timber.d("Notification $id dismissed via flip-to-silence")
-                    } catch (e: Exception) {
-                        Timber.e(e, "Error dismissing notification")
-                    }
-                }
-            }
-        }
-
-        private fun registerFlipToSilence(context: Context) {
-            if (sensorsRegistered) {
-                Timber.d("Flip-to-silence sensors already registered")
-                return
-            }
-
-            try {
-                // IMPORTANT: Use applicationContext to ensure sensors persist after BroadcastReceiver finishes
-                val appContext = context.applicationContext
-                sensorManager = appContext.getSystemService(Context.SENSOR_SERVICE) as SensorManager
-                mainHandler = Handler(Looper.getMainLooper())
-
-                // Reset state for new registration
-                hasInitialReading = false
-                flipDetectionEnabled = false
-                lastZ = 0f
-
-                val accelerometer = sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
-                val proximitySensor = sensorManager?.getDefaultSensor(Sensor.TYPE_PROXIMITY)
-
-                if (accelerometer == null) {
-                    Timber.w("Accelerometer sensor not available on this device")
-                } else {
-                    val registered = sensorManager?.registerListener(
-                        sensorListener,
-                        accelerometer,
-                        SensorManager.SENSOR_DELAY_FASTEST,  // Fastest for immediate flip detection
-                        mainHandler
-                    )
-                    Timber.d("Accelerometer registered: $registered")
-                }
-
-                if (proximitySensor == null) {
-                    Timber.w("Proximity sensor not available on this device")
-                } else {
-                    val registered = sensorManager?.registerListener(
-                        sensorListener,
-                        proximitySensor,
-                        SensorManager.SENSOR_DELAY_FASTEST,
-                        mainHandler
-                    )
-                    Timber.d("Proximity sensor registered: $registered")
-                }
-
-                sensorsRegistered = true
-
-                // Register volume change and screen off receivers for button dismissal
-                if (!receiversRegistered) {
-                    try {
-                        val volumeFilter = IntentFilter("android.media.VOLUME_CHANGED_ACTION")
-                        val screenFilter = IntentFilter(Intent.ACTION_SCREEN_OFF)
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            appContext.registerReceiver(volumeChangeReceiver, volumeFilter, Context.RECEIVER_EXPORTED)
-                            appContext.registerReceiver(screenOffReceiver, screenFilter, Context.RECEIVER_NOT_EXPORTED)
-                        } else {
-                            appContext.registerReceiver(volumeChangeReceiver, volumeFilter)
-                            appContext.registerReceiver(screenOffReceiver, screenFilter)
-                        }
-                        receiversRegistered = true
-                        Timber.d("Volume/screen receivers registered")
-                    } catch (e: Exception) {
-                        Timber.e(e, "Error registering volume/screen receivers")
-                    }
-                }
-
-                Timber.d("Flip-to-silence sensors registered for athan (using applicationContext)")
-            } catch (e: Exception) {
-                Timber.e(e, "Error registering flip-to-silence sensors")
-            }
-        }
-
-        private fun unregisterFlipToSilence() {
-            if (!sensorsRegistered) return
-
-            try {
-                sensorManager?.unregisterListener(sensorListener)
-                sensorsRegistered = false
-                hasInitialReading = false
-                flipDetectionEnabled = false
-
-                // Unregister volume/screen receivers
-                if (receiversRegistered) {
-                    try {
-                        currentContext?.let { ctx ->
-                            ctx.unregisterReceiver(volumeChangeReceiver)
-                            ctx.unregisterReceiver(screenOffReceiver)
-                        }
-                    } catch (e: IllegalArgumentException) {
-                        // Receivers not registered
-                    }
-                    receiversRegistered = false
-                    Timber.d("Volume/screen receivers unregistered")
-                }
-
-                sensorManager = null
-                mainHandler = null
-                Timber.d("Flip-to-silence sensors unregistered")
-            } catch (e: Exception) {
-                Timber.e(e, "Error unregistering flip-to-silence sensors")
-            }
-        }
-
-        fun stopFallbackAthan() {
-            try {
-                Timber.d("stopFallbackAthan called")
-
-                // Unregister flip-to-silence sensors first
-                unregisterFlipToSilence()
-
-                mediaPlayer?.let {
-                    try {
-                        if (it.isPlaying) {
-                            Timber.d("Stopping MediaPlayer")
-                            it.stop()
-                        }
-                    } catch (e: Exception) {
-                        Timber.e(e, "Error stopping MediaPlayer")
-                    }
-                    try {
-                        it.release()
-                        Timber.d("MediaPlayer released")
-                    } catch (e: Exception) {
-                        Timber.e(e, "Error releasing MediaPlayer")
-                    }
-                }
-                mediaPlayer = null
-
-                // Release wake lock
-                wakeLock?.let {
-                    if (it.isHeld) {
-                        it.release()
-                        Timber.d("WakeLock released")
-                    }
-                }
-                wakeLock = null
-
-                // Clear context and notification ID references
-                currentContext = null
-                currentNotificationId = null
-
-                Timber.d("Athan stopped and resources released")
-            } catch (e: Exception) {
-                Timber.e(e, "Error stopping athan")
-            }
-        }
     }
 
     override fun onReceive(context: Context, intent: Intent) {
         // Handle stop athan action
         if (intent.action == ACTION_STOP_ATHAN) {
             Timber.d("Stop athan action received")
-            // Stop both AthanService and fallback MediaPlayer
             AthanService.stopAthan(context)
-            stopFallbackAthan()
-            // Also dismiss the notification
-            val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            val prayerTypeName = intent.getStringExtra(EXTRA_PRAYER_TYPE)
-            if (prayerTypeName != null) {
-                try {
-                    val prayerType = PrayerType.valueOf(prayerTypeName)
-                    notificationManager.cancel(NOTIFICATION_ID_BASE + prayerType.ordinal)
-                } catch (e: Exception) {
-                    Timber.e(e, "Error cancelling notification")
-                }
-            }
             return
         }
 
@@ -391,15 +72,47 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
 
         Timber.d("Prayer alarm received for: $prayerType")
 
+        val settings = settingsRepository.getCurrentSettings()
+
+        // Guard: bail out if prayer notifications are globally disabled
+        if (!settings.prayerNotificationEnabled) {
+            Timber.d("$prayerType: Prayer notifications disabled globally, skipping")
+            return
+        }
+
+        // Guard: bail out if this specific prayer is disabled
+        val isPrayerEnabled = when (prayerType) {
+            PrayerType.FAJR -> settings.notifyFajr
+            PrayerType.DHUHR -> settings.notifyDhuhr
+            PrayerType.ASR -> settings.notifyAsr
+            PrayerType.MAGHRIB -> settings.notifyMaghrib
+            PrayerType.ISHA -> settings.notifyIsha
+            else -> true
+        }
+        if (!isPrayerEnabled) {
+            Timber.d("$prayerType: Notification disabled for this prayer, skipping")
+            return
+        }
+
         // Get notification mode for this prayer
         val mode = settingsRepository.getPrayerNotificationMode(prayerType.name)
-        val settings = settingsRepository.getCurrentSettings()
 
         when (mode) {
             PrayerNotificationMode.ATHAN -> {
-                // Play athan using notification sound (more reliable than foreground service on Android 12+)
-                val athanId = settingsRepository.getPrayerAthanId(prayerType.name)
-                showAthanNotification(context, prayerType, athanId, settings.athanMaxVolume)
+                // Check if phone is in silent/vibrate mode
+                val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                val ringerMode = audioManager.ringerMode
+                val isPhoneSilent = ringerMode == AudioManager.RINGER_MODE_SILENT || ringerMode == AudioManager.RINGER_MODE_VIBRATE
+
+                if (isPhoneSilent && !settings.athanInSilentMode) {
+                    // Phone is silent and user hasn't enabled "play in silent mode" - show notification only
+                    Timber.d("$prayerType: Phone is silent and athanInSilentMode is OFF, showing notification instead")
+                    showNotification(context, prayerType, false, ringerMode == AudioManager.RINGER_MODE_VIBRATE)
+                } else {
+                    // Play athan normally
+                    val athanId = settingsRepository.getPrayerAthanId(prayerType.name)
+                    showAthanNotification(context, prayerType, athanId, settings.athanMaxVolume)
+                }
             }
             PrayerNotificationMode.NOTIFICATION -> {
                 // Show notification only
@@ -459,291 +172,15 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
     }
 
     /**
-     * Show notification and play athan audio.
-     * Uses MediaPlayer directly since Android 12+ restricts foreground service starts from background.
-     * This approach is more reliable across all Android versions.
+     * Start AthanService to play athan audio.
+     * AthanService handles all playback, volume control, and dismissal.
      */
     private fun showAthanNotification(context: Context, prayerType: PrayerType, athanId: String, maxVolume: Boolean) {
-        Timber.d("Showing athan notification for $prayerType with athanId: $athanId")
-
-        // Check notification permission on Android 13+
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.POST_NOTIFICATIONS
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                Timber.w("Notification permission not granted")
-                return
-            }
-        }
-
-        val settings = settingsRepository.getCurrentSettings()
-        val isArabic = settings.appLanguage.code == "ar"
-        val (title, text) = getPrayerNotificationContent(prayerType, isArabic)
-
-        // Create athan notification channel
-        createAthanNotificationChannel(context)
-
-        // Create full-screen intent for when device is locked (like alarm apps)
-        val fullScreenIntent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            putExtra("navigate_to", "prayer_times")
-            putExtra("prayer_type", prayerType.name)
-        }
-        val fullScreenPendingIntent = PendingIntent.getActivity(
-            context,
-            prayerType.ordinal + 200,
-            fullScreenIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        // Create intent to stop athan
-        val stopIntent = Intent(context, PrayerAlarmReceiver::class.java).apply {
-            action = ACTION_STOP_ATHAN
-            putExtra(EXTRA_PRAYER_TYPE, prayerType.name)
-        }
-        val stopPendingIntent = PendingIntent.getBroadcast(
-            context,
-            prayerType.ordinal + 100,
-            stopIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val stopText = if (isArabic) "إيقاف" else "Stop"
-
-        val builder = NotificationCompat.Builder(context, CHANNEL_ID_ATHAN)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentTitle(title)
-            .setContentText(text)
-            .setPriority(NotificationCompat.PRIORITY_MAX)
-            .setCategory(NotificationCompat.CATEGORY_ALARM)
-            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setAutoCancel(true)
-            .setOngoing(false)  // Allow swipe to dismiss
-            .setFullScreenIntent(fullScreenPendingIntent, true)
-            .setContentIntent(stopPendingIntent)  // Tap to stop athan
-            .addAction(android.R.drawable.ic_media_pause, stopText, stopPendingIntent)
-            .setDeleteIntent(stopPendingIntent)  // Swipe to stop athan
-            .setSilent(true)  // No notification sound - we play athan audio directly
-
-        // Show notification
-        val notificationManager = NotificationManagerCompat.from(context)
-        notificationManager.notify(NOTIFICATION_ID_BASE + prayerType.ordinal, builder.build())
-        Timber.d("Athan notification shown for $prayerType")
-
-        // Play athan audio directly using MediaPlayer
-        // This is more reliable than trying to start a foreground service on Android 12+
-        // because startForegroundService() doesn't throw immediately - the exception
-        // happens inside the service when calling startForeground(), which we can't catch here
-        Timber.d("Playing athan directly with MediaPlayer for $prayerType")
-        playAthanWithMediaPlayer(context, athanId, maxVolume, prayerType)
-    }
-
-    /**
-     * Play athan directly using MediaPlayer with WakeLock.
-     * Uses synchronous operations to ensure playback starts before receiver is killed.
-     */
-    private fun playAthanWithMediaPlayer(context: Context, athanId: String, maxVolume: Boolean, prayerType: PrayerType? = null) {
-        Timber.d("=== playAthanWithMediaPlayer START === athanId: $athanId")
-
-        // FIRST: Acquire wake lock immediately to keep CPU running
+        Timber.d("PrayerAlarmReceiver: Starting AthanService for $prayerType with athanId: $athanId")
         try {
-            val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
-            wakeLock = powerManager.newWakeLock(
-                PowerManager.PARTIAL_WAKE_LOCK,
-                WAKELOCK_TAG
-            ).apply {
-                setReferenceCounted(false)
-                acquire(10 * 60 * 1000L) // 10 minutes max (athan duration)
-            }
-            Timber.d("WakeLock acquired")
+            AthanService.startAthan(context, athanId, prayerType)
         } catch (e: Exception) {
-            Timber.e(e, "Failed to acquire WakeLock")
-        }
-
-        // Use goAsync to extend receiver lifetime
-        val pendingResult = goAsync()
-
-        // Run on a background thread but use synchronous operations
-        Thread {
-            try {
-                Timber.d("Background thread started for athan playback")
-
-                // Get athan file path
-                var athanPath: String? = null
-
-                // Use runBlocking to call suspend functions synchronously
-                kotlinx.coroutines.runBlocking {
-                    athanPath = athanRepository.getAthanLocalPath(athanId)
-
-                    if (athanPath == null) {
-                        Timber.d("Athan file not found for $athanId, ensuring default is available")
-                        athanRepository.ensureDefaultAthanAvailable()
-
-                        // Try default athan if requested one isn't available
-                        athanPath = if (athanId != AthanRepository.DEFAULT_ATHAN_ID) {
-                            athanRepository.getAthanLocalPath(AthanRepository.DEFAULT_ATHAN_ID)
-                        } else {
-                            athanRepository.getAthanLocalPath(athanId)
-                        }
-                    }
-                }
-
-                if (athanPath == null) {
-                    Timber.e("No athan file available - cannot play")
-                    stopFallbackAthan()
-                    pendingResult.finish()
-                    return@Thread
-                }
-
-                // Verify file exists
-                val athanFile = File(athanPath!!)
-                if (!athanFile.exists()) {
-                    Timber.e("Athan file does not exist: $athanPath")
-                    stopFallbackAthan()
-                    pendingResult.finish()
-                    return@Thread
-                }
-
-                Timber.d("Athan file verified: $athanPath (size: ${athanFile.length()} bytes)")
-
-                // Stop any existing playback
-                stopFallbackAthan()
-
-                // Maximize volume if requested
-                if (maxVolume) {
-                    try {
-                        val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-                        val maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM)
-                        val currentVol = audioManager.getStreamVolume(AudioManager.STREAM_ALARM)
-                        audioManager.setStreamVolume(AudioManager.STREAM_ALARM, maxVol, 0)
-                        Timber.d("Alarm volume: was $currentVol, now set to max: $maxVol")
-                    } catch (e: Exception) {
-                        Timber.e(e, "Error setting volume")
-                    }
-                }
-
-                // Notification manager for dismissing on completion
-                val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                val notificationId = if (prayerType != null) NOTIFICATION_ID_BASE + prayerType.ordinal else null
-
-                // Create MediaPlayer with wake mode
-                Timber.d("Creating MediaPlayer...")
-                val player = MediaPlayer()
-
-                try {
-                    // Set audio attributes for alarm stream (plays over silent mode)
-                    player.setAudioAttributes(
-                        AudioAttributes.Builder()
-                            .setUsage(AudioAttributes.USAGE_ALARM)
-                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                            .setFlags(AudioAttributes.FLAG_AUDIBILITY_ENFORCED)
-                            .build()
-                    )
-
-                    // Set wake mode to keep playing even when screen off
-                    player.setWakeMode(context, PowerManager.PARTIAL_WAKE_LOCK)
-
-                    // Set data source
-                    player.setDataSource(athanPath)
-                    Timber.d("DataSource set: $athanPath")
-
-                    // Set completion listener
-                    player.setOnCompletionListener {
-                        Timber.d("=== Athan playback COMPLETED ===")
-                        stopFallbackAthan()
-                        notificationId?.let { id ->
-                            notificationManager.cancel(id)
-                            Timber.d("Notification dismissed")
-                        }
-                    }
-
-                    // Set error listener
-                    player.setOnErrorListener { _, what, extra ->
-                        Timber.e("=== Athan playback ERROR === what=$what, extra=$extra")
-                        stopFallbackAthan()
-                        notificationId?.let { id ->
-                            notificationManager.cancel(id)
-                        }
-                        true
-                    }
-
-                    // Store reference BEFORE prepare
-                    mediaPlayer = player
-
-                    // Store context and notification ID for flip-to-silence dismissal
-                    currentContext = context.applicationContext
-                    currentNotificationId = notificationId
-
-                    // SYNCHRONOUS prepare - blocks until ready
-                    Timber.d("Calling prepare() synchronously...")
-                    player.prepare()
-                    Timber.d("MediaPlayer prepared successfully")
-
-                    // Register flip-to-silence sensors BEFORE starting playback
-                    // to ensure we don't miss any sensor events
-                    val settings = settingsRepository.getCurrentSettings()
-                    if (settings.flipToSilenceAthan) {
-                        Timber.d("Flip-to-silence is enabled, registering sensors")
-                        // Reset lastZ to current position to prevent false triggers
-                        lastZ = 0f
-                        registerFlipToSilence(context)
-                    } else {
-                        Timber.d("Flip-to-silence is disabled")
-                    }
-
-                    // Start playback immediately
-                    player.start()
-                    Timber.d("=== Athan playback STARTED === isPlaying: ${player.isPlaying}")
-
-                    // Finish the pending result - MediaPlayer will continue playing
-                    // because it has its own wake lock via setWakeMode
-                    pendingResult.finish()
-                    Timber.d("PendingResult finished, MediaPlayer should continue playing")
-
-                } catch (e: Exception) {
-                    Timber.e(e, "=== Error during MediaPlayer setup/playback ===")
-                    try {
-                        player.release()
-                    } catch (releaseError: Exception) {
-                        Timber.e(releaseError, "Error releasing player after failure")
-                    }
-                    mediaPlayer = null
-                    stopFallbackAthan()
-                    pendingResult.finish()
-                }
-
-            } catch (e: Exception) {
-                Timber.e(e, "=== Fatal error in playAthanWithMediaPlayer ===")
-                stopFallbackAthan()
-                pendingResult.finish()
-            }
-        }.start()
-    }
-
-    /**
-     * Create notification channel for athan.
-     * Sound is handled by AthanService, not the notification.
-     */
-    private fun createAthanNotificationChannel(context: Context) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = "Athan"
-            val descriptionText = "Prayer call (Athan) notifications"
-            val importance = NotificationManager.IMPORTANCE_HIGH
-
-            val channel = NotificationChannel(CHANNEL_ID_ATHAN, name, importance).apply {
-                description = descriptionText
-                setBypassDnd(true)
-                lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
-                enableVibration(true)
-                vibrationPattern = longArrayOf(0, 500, 200, 500)
-                setSound(null, null)  // No sound from notification - AthanService plays audio
-            }
-
-            val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
-            Timber.d("Athan notification channel created")
+            Timber.e(e, "PrayerAlarmReceiver: Failed to start AthanService for $prayerType")
         }
     }
 

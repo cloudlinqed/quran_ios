@@ -62,6 +62,12 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    fun setDarkMode(preference: com.quranmedia.player.data.repository.DarkModePreference) {
+        viewModelScope.launch {
+            settingsRepository.setDarkModePreference(preference)
+        }
+    }
+
     private val _lastPlaybackInfo = MutableStateFlow<LastPlaybackInfo?>(null)
     val lastPlaybackInfo: StateFlow<LastPlaybackInfo?> = _lastPlaybackInfo.asStateFlow()
 

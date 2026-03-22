@@ -6,6 +6,7 @@ import com.quranmedia.player.data.database.dao.AyahDao
 import com.quranmedia.player.data.database.dao.ReadingBookmarkDao
 import com.quranmedia.player.data.database.entity.AyahEntity
 import com.quranmedia.player.data.database.entity.ReadingBookmarkEntity
+import com.quranmedia.player.data.model.extractAyahRefs
 import com.quranmedia.player.data.repository.SettingsRepository
 import com.quranmedia.player.data.repository.UserSettings
 import com.quranmedia.player.domain.model.Ayah
@@ -46,6 +47,7 @@ data class QuranReaderState(
     val isLoading: Boolean = true,
     val error: String? = null,
     val highlightedAyah: HighlightedAyah? = null,
+    val bookmarkedAyahs: Set<HighlightedAyah> = emptySet(),
     val isMetadataReady: Boolean = false,
     val reciters: List<Reciter> = emptyList(),
     val selectedReciter: Reciter? = null,
@@ -207,7 +209,8 @@ class QuranReaderViewModel @Inject constructor(
             try {
                 _state.value = _state.value.copy(isLoading = true, currentPage = pageNumber)
 
-                val ayahs = quranRepository.getAyahsByPage(pageNumber).first()
+                val dbAyahs = quranRepository.getAyahsByPage(pageNumber).first()
+                val ayahs = augmentAyahsFromPageLayout(pageNumber, dbAyahs)
 
                 _state.value = _state.value.copy(
                     ayahsOnPage = ayahs,
@@ -217,6 +220,13 @@ class QuranReaderViewModel @Inject constructor(
 
                 // Update last reading timestamp for reminder system
                 settingsRepository.updateLastReadingTimestamp()
+
+                // Save as recent page for bookmarks tab
+                val firstAyah = ayahs.firstOrNull()
+                if (firstAyah != null) {
+                    val surahName = surahNamesArabic[firstAyah.surahNumber] ?: ""
+                    settingsRepository.addRecentPage(pageNumber, surahName, firstAyah.surahNumber)
+                }
 
                 // Track page view start time for progress tracking
                 pageViewStartTime[pageNumber] = System.currentTimeMillis()
@@ -308,7 +318,37 @@ class QuranReaderViewModel @Inject constructor(
     }
 
     fun getAyahsForPage(pageNumber: Int): kotlinx.coroutines.flow.Flow<List<com.quranmedia.player.domain.model.Ayah>> {
-        return quranRepository.getAyahsByPage(pageNumber)
+        return quranRepository.getAyahsByPage(pageNumber).map { dbAyahs ->
+            augmentAyahsFromPageLayout(pageNumber, dbAyahs)
+        }
+    }
+
+    /**
+     * Augment the DB ayahs list with any ayahs that appear on this page's visual layout
+     * but have a different page number in the database (e.g., ayahs continuing from the
+     * previous page's surah). Uses the QCF page layout JSON as the source of truth.
+     */
+    private suspend fun augmentAyahsFromPageLayout(pageNumber: Int, dbAyahs: List<Ayah>): List<Ayah> {
+        return try {
+            val pageData = qcfAssetLoader.loadPageData(pageNumber) ?: return dbAyahs
+            val layoutRefs = pageData.extractAyahRefs()
+            if (layoutRefs.isEmpty()) return dbAyahs
+
+            val existingRefs = dbAyahs.map { it.surahNumber to it.ayahNumber }.toSet()
+            val missingRefs = layoutRefs.filter { it !in existingRefs }
+            if (missingRefs.isEmpty()) return dbAyahs
+
+            val additionalAyahs = missingRefs.mapNotNull { (surah, verse) ->
+                quranRepository.getAyah(surah, verse)
+            }
+
+            // Merge and order by page-layout reading order
+            val allAyahs = (dbAyahs + additionalAyahs).associateBy { it.surahNumber to it.ayahNumber }
+            layoutRefs.mapNotNull { ref -> allAyahs[ref] }
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to augment ayahs from page layout for page $pageNumber")
+            dbAyahs
+        }
     }
 
     private fun loadReciters() {
@@ -639,10 +679,40 @@ class QuranReaderViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Bookmark an ayah: saves page to bookmarks with ayah info, highlights the ayah immediately.
+     * If already bookmarked, removes it and clears highlight.
+     */
+    fun toggleBookmarkAyah(ayah: Ayah) {
+        viewModelScope.launch {
+            val bookmark = HighlightedAyah(ayah.surahNumber, ayah.ayahNumber)
+            val existing = readingBookmarkDao.getBookmarkForAyah(ayah.surahNumber, ayah.ayahNumber)
+            if (existing != null) {
+                readingBookmarkDao.deleteBookmark(existing.id)
+                _state.value = _state.value.copy(
+                    bookmarkedAyahs = _state.value.bookmarkedAyahs - bookmark,
+                    isCurrentPageBookmarked = (_state.value.bookmarkedAyahs - bookmark).isNotEmpty()
+                )
+            } else {
+                val surahName = getSurahNameForNumber(ayah.surahNumber)
+                readingBookmarkDao.insertBookmark(ReadingBookmarkEntity(
+                    pageNumber = _state.value.currentPage,
+                    surahNumber = ayah.surahNumber,
+                    ayahNumber = ayah.ayahNumber,
+                    surahName = surahName,
+                    label = "${surahName ?: ""} - آية ${ayah.ayahNumber}"
+                ))
+                _state.value = _state.value.copy(
+                    bookmarkedAyahs = _state.value.bookmarkedAyahs + bookmark,
+                    isCurrentPageBookmarked = true
+                )
+            }
+        }
+    }
+
     fun deleteReadingBookmark(bookmarkId: String) {
         viewModelScope.launch {
             readingBookmarkDao.deleteBookmark(bookmarkId)
-            Timber.d("Deleted bookmark $bookmarkId")
         }
     }
 
@@ -650,11 +720,20 @@ class QuranReaderViewModel @Inject constructor(
         return quranRepository.getSurahByNumber(surahNumber)?.nameArabic
     }
 
+    /**
+     * When page loads, check if there's a bookmarked ayah on this page and highlight it.
+     */
     fun updateCurrentPageBookmarkStatus(pageNumber: Int) {
         viewModelScope.launch {
-            val existingBookmark = readingBookmarkDao.getBookmarkForPage(pageNumber)
+            val ayahBookmarks = readingBookmarkDao.getAyahBookmarksForPage(pageNumber)
+            val bookmarked = ayahBookmarks.mapNotNull { entity ->
+                if (entity.surahNumber != null && entity.ayahNumber != null) {
+                    HighlightedAyah(entity.surahNumber, entity.ayahNumber)
+                } else null
+            }.toSet()
             _state.value = _state.value.copy(
-                isCurrentPageBookmarked = existingBookmark != null
+                isCurrentPageBookmarked = bookmarked.isNotEmpty(),
+                bookmarkedAyahs = bookmarked
             )
         }
     }
@@ -866,6 +945,18 @@ class QuranReaderViewModel @Inject constructor(
      * Set a highlighted ayah (from search result navigation).
      * The highlight will be cleared when playback starts.
      */
+    fun setReadingTheme(theme: com.quranmedia.player.data.repository.ReadingTheme) {
+        viewModelScope.launch {
+            settingsRepository.setReadingTheme(theme)
+        }
+    }
+
+    fun setDarkModePreference(preference: com.quranmedia.player.data.repository.DarkModePreference) {
+        viewModelScope.launch {
+            settingsRepository.setDarkModePreference(preference)
+        }
+    }
+
     fun setHighlightedAyah(surahNumber: Int, ayahNumber: Int) {
         _state.value = _state.value.copy(
             highlightedAyah = HighlightedAyah(surahNumber, ayahNumber)
@@ -1024,6 +1115,28 @@ class QuranReaderViewModel @Inject constructor(
      */
     fun dismissTafseer() {
         _tafseerState.value = TafseerModalState()
+    }
+
+    fun showTafseerPreviousAyah() {
+        val current = _tafseerState.value
+        if (!current.isVisible || current.ayah <= 1) return
+        val prevAyah = _state.value.ayahsOnPage.find {
+            it.surahNumber == current.surah && it.ayahNumber == current.ayah - 1
+        }
+        if (prevAyah != null) {
+            showTafseer(prevAyah)
+        }
+    }
+
+    fun showTafseerNextAyah() {
+        val current = _tafseerState.value
+        if (!current.isVisible) return
+        val nextAyah = _state.value.ayahsOnPage.find {
+            it.surahNumber == current.surah && it.ayahNumber == current.ayah + 1
+        }
+        if (nextAyah != null) {
+            showTafseer(nextAyah)
+        }
     }
 
     /**

@@ -19,6 +19,7 @@ import com.quranmedia.player.data.database.dao.SurahDao
 import com.quranmedia.player.data.database.dao.DailyActivityDao
 import com.quranmedia.player.data.database.dao.QuranProgressDao
 import com.quranmedia.player.data.database.dao.KhatmahGoalDao
+import com.quranmedia.player.data.database.dao.HadithDao
 import com.quranmedia.player.data.database.dao.TafseerDao
 import dagger.Module
 import dagger.Provides
@@ -166,6 +167,65 @@ object DatabaseModule {
         }
     }
 
+    /**
+     * Migration from version 9 to 10
+     * Adds Hadith Library tables (books, chapters, hadiths, FTS)
+     */
+    private val MIGRATION_9_10 = object : Migration(9, 10) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Create hadith_books table
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS hadith_books (
+                    id TEXT NOT NULL PRIMARY KEY,
+                    titleArabic TEXT NOT NULL,
+                    titleEnglish TEXT NOT NULL,
+                    authorArabic TEXT NOT NULL,
+                    authorEnglish TEXT NOT NULL,
+                    hadithCount INTEGER NOT NULL,
+                    isBundled INTEGER NOT NULL,
+                    isDownloaded INTEGER NOT NULL DEFAULT 0,
+                    downloadedAt INTEGER
+                )
+            """)
+
+            // Create hadith_chapters table
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS hadith_chapters (
+                    bookId TEXT NOT NULL,
+                    chapterId INTEGER NOT NULL,
+                    titleArabic TEXT NOT NULL,
+                    titleEnglish TEXT NOT NULL,
+                    PRIMARY KEY(bookId, chapterId)
+                )
+            """)
+
+            // Create hadiths table
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS hadiths (
+                    bookId TEXT NOT NULL,
+                    hadithId INTEGER NOT NULL,
+                    idInBook INTEGER NOT NULL,
+                    chapterId INTEGER NOT NULL,
+                    textArabic TEXT NOT NULL,
+                    narratorEnglish TEXT NOT NULL,
+                    textEnglish TEXT NOT NULL,
+                    PRIMARY KEY(bookId, hadithId)
+                )
+            """)
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_hadiths_bookId_chapterId ON hadiths(bookId, chapterId)")
+        }
+    }
+
+    /**
+     * Migration from version 10 to 11
+     * Adds ayahNumber column to reading_bookmarks for ayah-level bookmarking
+     */
+    private val MIGRATION_10_11 = object : Migration(10, 11) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("ALTER TABLE reading_bookmarks ADD COLUMN ayahNumber INTEGER DEFAULT NULL")
+        }
+    }
+
     @Provides
     @Singleton
     fun provideQuranDatabase(
@@ -176,7 +236,7 @@ object DatabaseModule {
             QuranDatabase::class.java,
             "quran_media_db"
         )
-            .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
+            .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11)
             .fallbackToDestructiveMigration() // Fallback for other migrations
             .build()
     }
@@ -254,5 +314,10 @@ object DatabaseModule {
     @Provides
     fun provideTafseerDao(database: QuranDatabase): TafseerDao {
         return database.tafseerDao()
+    }
+
+    @Provides
+    fun provideHadithDao(database: QuranDatabase): HadithDao {
+        return database.hadithDao()
     }
 }

@@ -89,6 +89,7 @@ fun QCFPageComposable(
     useBoldFont: Boolean = false,
     ayahs: List<Ayah> = emptyList(),
     highlightedAyah: HighlightedAyah? = null,
+    bookmarkedAyahHighlights: Set<HighlightedAyah> = emptySet(),
     readingTheme: ReadingTheme = ReadingTheme.LIGHT,
     customBackgroundColor: Color? = null,
     customTextColor: Color? = null,
@@ -311,6 +312,7 @@ fun QCFPageComposable(
                             plainTextColor = plainTextColor,
                             ayahs = ayahs,
                             highlightedAyah = highlightedAyah,
+                            bookmarkedAyahHighlights = bookmarkedAyahHighlights,
                             onTap = onTap,
                             onAyahLongPress = onAyahLongPress,
                             modifier = Modifier.fillMaxWidth()
@@ -425,6 +427,7 @@ private fun QCFLine(
     plainTextColor: Color? = null,
     ayahs: List<Ayah> = emptyList(),
     highlightedAyah: HighlightedAyah? = null,
+    bookmarkedAyahHighlights: Set<HighlightedAyah> = emptySet(),
     onTap: (() -> Unit)? = null,
     onAyahLongPress: ((Ayah, Offset) -> Unit)? = null,
     modifier: Modifier = Modifier
@@ -466,6 +469,7 @@ private fun QCFLine(
                 plainTextColor = plainTextColor,
                 ayahs = ayahs,
                 highlightedAyah = highlightedAyah,
+                bookmarkedAyahHighlights = bookmarkedAyahHighlights,
                 onTap = onTap,
                 onAyahLongPress = onAyahLongPress,
                 modifier = modifier
@@ -639,6 +643,7 @@ private fun QCFTextLine(
     plainTextColor: Color? = null,
     ayahs: List<Ayah> = emptyList(),
     highlightedAyah: HighlightedAyah? = null,
+    bookmarkedAyahHighlights: Set<HighlightedAyah> = emptySet(),
     onTap: (() -> Unit)? = null,
     onAyahLongPress: ((Ayah, Offset) -> Unit)? = null,
     modifier: Modifier = Modifier
@@ -657,12 +662,13 @@ private fun QCFTextLine(
     val textColor = plainTextColor ?: Color.Unspecified
 
     // Build AnnotatedString with word-level highlighting
-    val annotatedText = remember(words, highlightedAyah, textColor, themeColors.highlight) {
+    val annotatedText = remember(words, highlightedAyah, bookmarkedAyahHighlights, textColor, themeColors.highlight) {
         buildAnnotatedString {
             words.forEachIndexed { index, word ->
-                val isHighlighted = highlightedAyah != null &&
+                val isHighlighted = (highlightedAyah != null &&
                     word.getSurahNumber() == highlightedAyah.surahNumber &&
-                    word.getVerseNumber() == highlightedAyah.ayahNumber
+                    word.getVerseNumber() == highlightedAyah.ayahNumber) ||
+                    bookmarkedAyahHighlights.any { it.surahNumber == word.getSurahNumber() && it.ayahNumber == word.getVerseNumber() }
 
                 // Add space between words (not before the first word)
                 if (index > 0) {

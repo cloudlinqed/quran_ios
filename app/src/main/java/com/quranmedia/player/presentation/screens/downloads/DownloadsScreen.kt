@@ -10,7 +10,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
-import com.quranmedia.player.presentation.components.CommonOverflowMenu
+import com.quranmedia.player.presentation.components.BottomNavBar
+import com.quranmedia.player.presentation.components.DarkModeToggle
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,9 +31,7 @@ import com.quranmedia.player.data.repository.AppLanguage
 import com.quranmedia.player.domain.model.Reciter
 import com.quranmedia.player.domain.model.Surah
 import com.quranmedia.player.presentation.screens.reader.components.scheherazadeFont
-import com.quranmedia.player.presentation.screens.reader.components.islamicGreen
-import com.quranmedia.player.presentation.screens.reader.components.darkGreen
-import com.quranmedia.player.presentation.screens.reader.components.creamBackground
+import com.quranmedia.player.presentation.theme.AppTheme
 import com.quranmedia.player.presentation.util.layoutDirection
 import com.quranmedia.player.domain.util.ArabicNumeralUtils
 
@@ -40,14 +39,18 @@ import com.quranmedia.player.domain.util.ArabicNumeralUtils
 @Composable
 fun DownloadsScreen(
     onNavigateBack: () -> Unit,
+    onToggleDarkMode: () -> Unit = {},
     onDownloadClick: (reciterId: String, surahNumber: Int) -> Unit = { _, _ -> },
     onNavigateToSettings: () -> Unit = {},
     onNavigateToPrayerTimes: () -> Unit = {},
+    onNavigateToQibla: () -> Unit = {},
     onNavigateToAthkar: () -> Unit = {},
     onNavigateToTracker: () -> Unit = {},
     onNavigateToAbout: () -> Unit = {},
     onNavigateToReading: () -> Unit = {},
     onNavigateToImsakiya: () -> Unit = {},
+    onNavigateToHadith: () -> Unit = {},
+    onNavigateByRoute: (String) -> Unit = {},
     viewModel: DownloadsViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -67,39 +70,37 @@ fun DownloadsScreen(
                     },
                     navigationIcon = {
                         IconButton(onClick = onNavigateBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = AppTheme.colors.textOnHeader)
                         }
                     },
                     actions = {
-                        CommonOverflowMenu(
-                            language = language,
-                            onNavigateToSettings = onNavigateToSettings,
-                            onNavigateToReading = onNavigateToReading,
-                            onNavigateToPrayerTimes = onNavigateToPrayerTimes,
-                            onNavigateToImsakiya = onNavigateToImsakiya,
-                            onNavigateToAthkar = onNavigateToAthkar,
-                            onNavigateToTracker = onNavigateToTracker,
-                            onNavigateToAbout = onNavigateToAbout,
-                            hideDownloads = true  // Hide Downloads since we're on this screen
-                        )
+                        DarkModeToggle(language = language, onToggle = { onToggleDarkMode() })
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = islamicGreen,
-                        titleContentColor = Color.White,
-                        navigationIconContentColor = Color.White
+                        containerColor = AppTheme.colors.topBarBackground,
+                        titleContentColor = AppTheme.colors.goldAccent,
+                        navigationIconContentColor = AppTheme.colors.goldAccent,
+                        actionIconContentColor = AppTheme.colors.goldAccent
                     )
+                )
+            },
+            bottomBar = {
+                BottomNavBar(
+                    currentRoute = "downloads",
+                    language = language,
+                    onNavigate = { route -> onNavigateByRoute(route) }
                 )
             },
             floatingActionButton = {
                 FloatingActionButton(
                     onClick = { viewModel.showDownloadDialog() },
-                    containerColor = islamicGreen,
-                    contentColor = Color.White
+                    containerColor = AppTheme.colors.islamicGreen,
+                    contentColor = AppTheme.colors.textOnPrimary
                 ) {
                     Icon(Icons.Default.Add, contentDescription = if (language == AppLanguage.ARABIC) "إضافة تنزيل" else "Add Download")
                 }
             },
-            containerColor = creamBackground
+            containerColor = AppTheme.colors.screenBackground
         ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -110,7 +111,7 @@ fun DownloadsScreen(
                 state.isLoading -> {
                     CircularProgressIndicator(
                         modifier = Modifier.align(Alignment.Center),
-                        color = islamicGreen
+                        color = AppTheme.colors.islamicGreen
                     )
                 }
                 state.downloads.isEmpty() -> {
@@ -175,7 +176,7 @@ private fun EmptyDownloadsView(
     language: AppLanguage = AppLanguage.ENGLISH,
     onAddDownload: () -> Unit = {}
 ) {
-    val islamicGreen = Color(0xFF2E7D32)
+    val islamicGreen = AppTheme.colors.islamicGreen
 
     Column(
         modifier = modifier.padding(32.dp),
@@ -185,21 +186,21 @@ private fun EmptyDownloadsView(
             Icons.Default.CloudDownload,
             contentDescription = null,
             modifier = Modifier.size(80.dp),
-            tint = Color.Gray.copy(alpha = 0.5f)
+            tint = AppTheme.colors.iconDefault
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = if (language == AppLanguage.ARABIC) "لا توجد تنزيلات" else "No Downloads Yet",
             fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
             style = MaterialTheme.typography.titleLarge,
-            color = Color.Gray
+            color = AppTheme.colors.textSecondary
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = if (language == AppLanguage.ARABIC) "قم بتنزيل السور للاستماع بدون إنترنت" else "Download surahs for offline listening",
             fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
             style = MaterialTheme.typography.bodyMedium,
-            color = Color.Gray.copy(alpha = 0.7f)
+            color = AppTheme.colors.textSecondary
         )
         Spacer(modifier = Modifier.height(24.dp))
         Button(
@@ -228,7 +229,7 @@ private fun DownloadCard(
     useIndoArabic: Boolean = false
 ) {
     val download = downloadWithReciter.download
-    val islamicGreen = Color(0xFF2E7D32)
+    val islamicGreen = AppTheme.colors.islamicGreen
     val isArabic = language == AppLanguage.ARABIC
 
     // Choose the appropriate reciter name based on language
@@ -243,7 +244,7 @@ private fun DownloadCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = AppTheme.colors.cardBackground
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
@@ -272,14 +273,14 @@ private fun DownloadCard(
                         fontFamily = if (isArabic) scheherazadeFont else null,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        color = AppTheme.colors.textPrimary
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = reciterDisplayName,
                         fontFamily = if (isArabic && downloadWithReciter.reciterNameArabic != null) scheherazadeFont else null,
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray,
+                        color = AppTheme.colors.textSecondary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -300,7 +301,7 @@ private fun DownloadCard(
                             .fillMaxWidth()
                             .height(8.dp),
                         color = islamicGreen,
-                        trackColor = Color.Gray.copy(alpha = 0.2f)
+                        trackColor = AppTheme.colors.divider
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Row(
@@ -310,12 +311,12 @@ private fun DownloadCard(
                         Text(
                             text = ArabicNumeralUtils.formatNumber((download.progress * 100).toInt(), useIndoArabic) + "%",
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray
+                            color = AppTheme.colors.textSecondary
                         )
                         Text(
                             text = formatBytes(download.bytesDownloaded) + " / " + formatBytes(download.bytesTotal),
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray
+                            color = AppTheme.colors.textSecondary
                         )
                     }
                 }
@@ -449,7 +450,7 @@ private fun DownloadSelectionDialog(
     onConfirm: () -> Unit,
     useIndoArabic: Boolean = false
 ) {
-    val islamicGreen = Color(0xFF2E7D32)
+    val islamicGreen = AppTheme.colors.islamicGreen
     val isArabic = language == AppLanguage.ARABIC
     var reciterExpanded by remember { mutableStateOf(false) }
     var surahExpanded by remember { mutableStateOf(false) }
@@ -460,7 +461,7 @@ private fun DownloadSelectionDialog(
                 .fillMaxWidth()
                 .padding(16.dp),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+            colors = CardDefaults.cardColors(containerColor = AppTheme.colors.cardBackground)
         ) {
             Column(
                 modifier = Modifier
@@ -489,7 +490,7 @@ private fun DownloadSelectionDialog(
                         text = if (isArabic) "اختر القارئ" else "Select Reciter",
                         fontFamily = if (isArabic) scheherazadeFont else null,
                         fontSize = 14.sp,
-                        color = Color.Gray
+                        color = AppTheme.colors.textSecondary
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     ExposedDropdownMenuBox(
@@ -509,14 +510,14 @@ private fun DownloadSelectionDialog(
                                 .menuAnchor(),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = islamicGreen,
-                                unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f),
-                                focusedTextColor = Color.Black,
-                                unfocusedTextColor = Color.Black
+                                unfocusedBorderColor = AppTheme.colors.border,
+                                focusedTextColor = AppTheme.colors.textPrimary,
+                                unfocusedTextColor = AppTheme.colors.textPrimary
                             ),
                             textStyle = androidx.compose.ui.text.TextStyle(
                                 fontFamily = if (isArabic && selectedReciter?.nameArabic != null) scheherazadeFont else null,
                                 fontSize = 16.sp,
-                                color = Color.Black
+                                color = AppTheme.colors.textPrimary
                             )
                         )
                         ExposedDropdownMenu(
@@ -546,7 +547,7 @@ private fun DownloadSelectionDialog(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = if (downloadFullQuran) islamicGreen.copy(alpha = 0.1f) else Color.Gray.copy(alpha = 0.05f)
+                        containerColor = if (downloadFullQuran) islamicGreen.copy(alpha = 0.1f) else AppTheme.colors.surfaceVariant
                     )
                 ) {
                     Row(
@@ -563,23 +564,23 @@ private fun DownloadSelectionDialog(
                                 fontFamily = if (isArabic) scheherazadeFont else null,
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Medium,
-                                color = Color.Black
+                                color = AppTheme.colors.textPrimary
                             )
                             Text(
                                 text = if (isArabic) "تنزيل جميع السور (١١٤ سورة)" else "Download all 114 surahs",
                                 fontFamily = if (isArabic) scheherazadeFont else null,
                                 fontSize = 12.sp,
-                                color = Color.Gray
+                                color = AppTheme.colors.textSecondary
                             )
                         }
                         Switch(
                             checked = downloadFullQuran,
                             onCheckedChange = { onFullQuranToggled(it) },
                             colors = SwitchDefaults.colors(
-                                checkedThumbColor = Color.White,
+                                checkedThumbColor = AppTheme.colors.textOnPrimary,
                                 checkedTrackColor = islamicGreen,
-                                uncheckedThumbColor = Color.White,
-                                uncheckedTrackColor = Color.Gray.copy(alpha = 0.3f)
+                                uncheckedThumbColor = AppTheme.colors.cardBackground,
+                                uncheckedTrackColor = AppTheme.colors.switchTrackOff
                             )
                         )
                     }
@@ -592,7 +593,7 @@ private fun DownloadSelectionDialog(
                             text = if (isArabic) "اختر السورة" else "Select Surah",
                             fontFamily = if (isArabic) scheherazadeFont else null,
                             fontSize = 14.sp,
-                            color = Color.Gray
+                            color = AppTheme.colors.textSecondary
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         ExposedDropdownMenuBox(
@@ -610,7 +611,7 @@ private fun DownloadSelectionDialog(
                                     Text(
                                         text = if (isArabic) "اختر سورة..." else "Choose a surah...",
                                         fontFamily = if (isArabic) scheherazadeFont else null,
-                                        color = Color.Gray
+                                        color = AppTheme.colors.textSecondary
                                     )
                                 },
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = surahExpanded) },
@@ -619,14 +620,14 @@ private fun DownloadSelectionDialog(
                                     .menuAnchor(),
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = islamicGreen,
-                                    unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f),
-                                    focusedTextColor = Color.Black,
-                                    unfocusedTextColor = Color.Black
+                                    unfocusedBorderColor = AppTheme.colors.border,
+                                    focusedTextColor = AppTheme.colors.textPrimary,
+                                    unfocusedTextColor = AppTheme.colors.textPrimary
                                 ),
                                 textStyle = androidx.compose.ui.text.TextStyle(
                                     fontFamily = if (isArabic) scheherazadeFont else null,
                                     fontSize = 16.sp,
-                                    color = Color.Black
+                                    color = AppTheme.colors.textPrimary
                                 )
                             )
                             ExposedDropdownMenu(
@@ -663,7 +664,7 @@ private fun DownloadSelectionDialog(
                         onClick = onDismiss,
                         modifier = Modifier.weight(1f),
                         enabled = !isDownloading,
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Gray)
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.colors.textSecondary)
                     ) {
                         Text(
                             text = if (isArabic) "إلغاء" else "Cancel",
@@ -679,7 +680,7 @@ private fun DownloadSelectionDialog(
                         if (isDownloading) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(18.dp),
-                                color = Color.White,
+                                color = AppTheme.colors.textOnPrimary,
                                 strokeWidth = 2.dp
                             )
                             Spacer(modifier = Modifier.width(8.dp))

@@ -7,6 +7,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 
+// Recent page entry for bookmarks screen
+data class RecentPage(
+    val pageNumber: Int,
+    val surahName: String,
+    val surahNumber: Int,
+    val timestamp: Long
+)
+
 // App language enum
 enum class AppLanguage(val code: String) {
     ARABIC("ar"),
@@ -26,6 +34,18 @@ enum class ReadingTheme(
     OCEAN("ocean", "محيط", "Ocean"),
     TAJWEED("tajweed", "تجويد", "Tajweed"),
     CUSTOM("custom", "مخصص", "Custom");
+
+    fun getLabel(language: AppLanguage): String = when (language) {
+        AppLanguage.ARABIC -> arabicLabel
+        AppLanguage.ENGLISH -> englishLabel
+    }
+}
+
+// Dark mode preference
+enum class DarkModePreference(val id: String, val arabicLabel: String, val englishLabel: String) {
+    OFF("off", "فاتح", "Light"),
+    ON("on", "داكن", "Dark"),
+    AUTO("auto", "تلقائي", "Auto");
 
     fun getLabel(language: AppLanguage): String = when (language) {
         AppLanguage.ARABIC -> arabicLabel
@@ -76,7 +96,7 @@ data class UserSettings(
     val waveformEnabled: Boolean = true,
     val showTranslation: Boolean = false,
     val translationLanguage: String = "en",
-    val darkMode: Boolean = false,
+    val darkModePreference: DarkModePreference = DarkModePreference.AUTO,
     val dynamicColors: Boolean = true,
     val wifiOnlyDownloads: Boolean = false,
     val autoDeleteAfterPlayback: Boolean = false,
@@ -139,6 +159,7 @@ data class UserSettings(
     val ishaAthanId: String = "default_abdulbasit",
     // Athan playback settings
     val athanMaxVolume: Boolean = false,  // Play athan at maximum volume - default OFF
+    val athanInSilentMode: Boolean = false,  // Play athan even when phone is on silent/vibrate - default OFF
     val flipToSilenceAthan: Boolean = false,  // Flip phone face-down to stop athan - default OFF
     // Version tracking and first-run
     val lastSeenVersionCode: Int = 0,  // Last version code that showed What's New screen
@@ -153,7 +174,16 @@ data class UserSettings(
     val qcfTajweedMode: Boolean = false,  // false = V2 (plain, customizable color), true = V4 (Tajweed embedded colors)
     // Indo-Arabic numerals (٠١٢٣٤٥٦٧٨٩) - only applies when app language is Arabic
     // Default to true since Arabic users typically expect Indo-Arabic numerals
-    val useIndoArabicNumerals: Boolean = true
+    val useIndoArabicNumerals: Boolean = true,
+    // Khatmah goal for the bookmarks tab (1-10 khatmahs per Hijri month)
+    val khatmahCountTarget: Int = 1,
+    // Athkar notification settings
+    val morningAthkarNotificationEnabled: Boolean = false,
+    val eveningAthkarNotificationEnabled: Boolean = false,
+    val morningAthkarNotificationHour: Int = 7,    // 7 AM
+    val morningAthkarNotificationMinute: Int = 0,
+    val eveningAthkarNotificationHour: Int = 19,   // 7 PM
+    val eveningAthkarNotificationMinute: Int = 0
 )
 
 @Singleton
@@ -180,7 +210,9 @@ class SettingsRepository @Inject constructor(
             waveformEnabled = prefs.getBoolean("waveformEnabled", true),
             showTranslation = prefs.getBoolean("showTranslation", false),
             translationLanguage = prefs.getString("translationLanguage", "en") ?: "en",
-            darkMode = prefs.getBoolean("darkMode", false),
+            darkModePreference = DarkModePreference.entries.find {
+                it.id == prefs.getString("darkModePreference", null)
+            } ?: if (prefs.getBoolean("darkMode", false)) DarkModePreference.ON else DarkModePreference.AUTO,
             dynamicColors = prefs.getBoolean("dynamicColors", true),
             wifiOnlyDownloads = prefs.getBoolean("wifiOnlyDownloads", false),
             autoDeleteAfterPlayback = prefs.getBoolean("autoDeleteAfterPlayback", false),
@@ -227,6 +259,7 @@ class SettingsRepository @Inject constructor(
             maghribAthanId = prefs.getString("maghribAthanId", "default_abdulbasit") ?: "default_abdulbasit",
             ishaAthanId = prefs.getString("ishaAthanId", "default_abdulbasit") ?: "default_abdulbasit",
             athanMaxVolume = prefs.getBoolean("athanMaxVolume", false),
+            athanInSilentMode = prefs.getBoolean("athanInSilentMode", false),
             flipToSilenceAthan = prefs.getBoolean("flipToSilenceAthan", false),
             lastSeenVersionCode = prefs.getInt("lastSeenVersionCode", 0),
             hasCompletedInitialSetup = prefs.getBoolean("hasCompletedInitialSetup", false),
@@ -235,7 +268,14 @@ class SettingsRepository @Inject constructor(
             useBoldFont = prefs.getBoolean("useBoldFont", false),
             useQCFFont = prefs.getBoolean("useQCFFont", false),
             qcfTajweedMode = prefs.getBoolean("qcfTajweedMode", false),
-            useIndoArabicNumerals = prefs.getBoolean("useIndoArabicNumerals", true)
+            useIndoArabicNumerals = prefs.getBoolean("useIndoArabicNumerals", true),
+            khatmahCountTarget = prefs.getInt("khatmahCountTarget", 1).coerceIn(1, 10),
+            morningAthkarNotificationEnabled = prefs.getBoolean("morningAthkarNotificationEnabled", false),
+            eveningAthkarNotificationEnabled = prefs.getBoolean("eveningAthkarNotificationEnabled", false),
+            morningAthkarNotificationHour = prefs.getInt("morningAthkarNotificationHour", 7),
+            morningAthkarNotificationMinute = prefs.getInt("morningAthkarNotificationMinute", 0),
+            eveningAthkarNotificationHour = prefs.getInt("eveningAthkarNotificationHour", 19),
+            eveningAthkarNotificationMinute = prefs.getInt("eveningAthkarNotificationMinute", 0)
         )
     }
 
@@ -254,7 +294,7 @@ class SettingsRepository @Inject constructor(
             putBoolean("waveformEnabled", settings.waveformEnabled)
             putBoolean("showTranslation", settings.showTranslation)
             putString("translationLanguage", settings.translationLanguage)
-            putBoolean("darkMode", settings.darkMode)
+            putString("darkModePreference", settings.darkModePreference.id)
             putBoolean("dynamicColors", settings.dynamicColors)
             putBoolean("wifiOnlyDownloads", settings.wifiOnlyDownloads)
             putBoolean("autoDeleteAfterPlayback", settings.autoDeleteAfterPlayback)
@@ -301,6 +341,7 @@ class SettingsRepository @Inject constructor(
             putString("maghribAthanId", settings.maghribAthanId)
             putString("ishaAthanId", settings.ishaAthanId)
             putBoolean("athanMaxVolume", settings.athanMaxVolume)
+            putBoolean("athanInSilentMode", settings.athanInSilentMode)
             putBoolean("flipToSilenceAthan", settings.flipToSilenceAthan)
             putInt("lastSeenVersionCode", settings.lastSeenVersionCode)
             putBoolean("hasCompletedInitialSetup", settings.hasCompletedInitialSetup)
@@ -310,6 +351,13 @@ class SettingsRepository @Inject constructor(
             putBoolean("useQCFFont", settings.useQCFFont)
             putBoolean("qcfTajweedMode", settings.qcfTajweedMode)
             putBoolean("useIndoArabicNumerals", settings.useIndoArabicNumerals)
+            putInt("khatmahCountTarget", settings.khatmahCountTarget)
+            putBoolean("morningAthkarNotificationEnabled", settings.morningAthkarNotificationEnabled)
+            putBoolean("eveningAthkarNotificationEnabled", settings.eveningAthkarNotificationEnabled)
+            putInt("morningAthkarNotificationHour", settings.morningAthkarNotificationHour)
+            putInt("morningAthkarNotificationMinute", settings.morningAthkarNotificationMinute)
+            putInt("eveningAthkarNotificationHour", settings.eveningAthkarNotificationHour)
+            putInt("eveningAthkarNotificationMinute", settings.eveningAthkarNotificationMinute)
             apply()
         }
     }
@@ -377,8 +425,8 @@ class SettingsRepository @Inject constructor(
         updateSettings { copy(translationLanguage = language) }
     }
 
-    suspend fun setDarkMode(enabled: Boolean) {
-        updateSettings { copy(darkMode = enabled) }
+    suspend fun setDarkModePreference(preference: DarkModePreference) {
+        updateSettings { copy(darkModePreference = preference) }
     }
 
     suspend fun setDynamicColors(enabled: Boolean) {
@@ -586,6 +634,10 @@ class SettingsRepository @Inject constructor(
         updateSettings { copy(athanMaxVolume = enabled) }
     }
 
+    suspend fun setAthanInSilentMode(enabled: Boolean) {
+        updateSettings { copy(athanInSilentMode = enabled) }
+    }
+
     suspend fun setFlipToSilenceAthan(enabled: Boolean) {
         updateSettings { copy(flipToSilenceAthan = enabled) }
     }
@@ -616,6 +668,11 @@ class SettingsRepository @Inject constructor(
     // Indo-Arabic numerals setting
     suspend fun setUseIndoArabicNumerals(enabled: Boolean) {
         updateSettings { copy(useIndoArabicNumerals = enabled) }
+    }
+
+    // Khatmah goal setting (1-10 per Hijri month)
+    suspend fun setKhatmahCountTarget(count: Int) {
+        updateSettings { copy(khatmahCountTarget = count.coerceIn(1, 10)) }
     }
 
     /**
@@ -772,5 +829,73 @@ class SettingsRepository @Inject constructor(
         // Show on first install OR version upgrade
         return !settings.hasCompletedInitialSetup ||
                settings.lastSeenVersionCode < currentVersionCode
+    }
+
+    // ── Recent Pages (max 3, stored independently from UserSettings) ──
+
+    private val _recentPages = MutableStateFlow(loadRecentPages())
+    val recentPages: Flow<List<RecentPage>> = _recentPages
+
+    fun addRecentPage(pageNumber: Int, surahName: String, surahNumber: Int) {
+        val current = _recentPages.value.toMutableList()
+        // Remove if already exists (will be re-added at front)
+        current.removeAll { it.pageNumber == pageNumber }
+        // Add to front
+        current.add(0, RecentPage(pageNumber, surahName, surahNumber, System.currentTimeMillis()))
+        // Keep max 3
+        val trimmed = current.take(3)
+        _recentPages.value = trimmed
+        saveRecentPages(trimmed)
+    }
+
+    private fun loadRecentPages(): List<RecentPage> {
+        val pages = mutableListOf<RecentPage>()
+        for (i in 0 until 3) {
+            val page = prefs.getInt("recent_page_${i}_number", -1)
+            if (page < 0) continue
+            pages.add(RecentPage(
+                pageNumber = page,
+                surahName = prefs.getString("recent_page_${i}_surahName", "") ?: "",
+                surahNumber = prefs.getInt("recent_page_${i}_surahNumber", 1),
+                timestamp = prefs.getLong("recent_page_${i}_timestamp", 0L)
+            ))
+        }
+        return pages
+    }
+
+    private fun saveRecentPages(pages: List<RecentPage>) {
+        prefs.edit().apply {
+            pages.forEachIndexed { i, page ->
+                putInt("recent_page_${i}_number", page.pageNumber)
+                putString("recent_page_${i}_surahName", page.surahName)
+                putInt("recent_page_${i}_surahNumber", page.surahNumber)
+                putLong("recent_page_${i}_timestamp", page.timestamp)
+            }
+            for (i in pages.size until 3) {
+                remove("recent_page_${i}_number")
+                remove("recent_page_${i}_surahName")
+                remove("recent_page_${i}_surahNumber")
+                remove("recent_page_${i}_timestamp")
+            }
+            apply()
+        }
+    }
+
+    // ── Athkar Notification Settings ──
+
+    suspend fun setMorningAthkarNotificationEnabled(enabled: Boolean) {
+        updateSettings { copy(morningAthkarNotificationEnabled = enabled) }
+    }
+
+    suspend fun setEveningAthkarNotificationEnabled(enabled: Boolean) {
+        updateSettings { copy(eveningAthkarNotificationEnabled = enabled) }
+    }
+
+    suspend fun setMorningAthkarNotificationTime(hour: Int, minute: Int) {
+        updateSettings { copy(morningAthkarNotificationHour = hour, morningAthkarNotificationMinute = minute) }
+    }
+
+    suspend fun setEveningAthkarNotificationTime(hour: Int, minute: Int) {
+        updateSettings { copy(eveningAthkarNotificationHour = hour, eveningAthkarNotificationMinute = minute) }
     }
 }

@@ -32,10 +32,10 @@ data class SurahWithPage(
 )
 
 data class IndexReadingBookmark(
-    val id: String,
+    val bookmarkIds: List<String>,
     val pageNumber: Int,
     val surahName: String?,
-    val label: String?,
+    val ayahLabels: List<String>,
     val createdAt: Long
 )
 
@@ -52,12 +52,11 @@ data class QuranIndexState(
     val juzStartInfo: List<JuzStartInfo> = emptyList(),
     val hizbQuartersInfo: List<HizbQuarterInfo> = emptyList(),
     val readingBookmarks: List<IndexReadingBookmark> = emptyList(),
+    val recentPages: List<com.quranmedia.player.data.repository.RecentPage> = emptyList(),
     val isLoading: Boolean = true,
     // Search state
     val searchResults: List<SearchResultWithPage> = emptyList(),
-    val isSearching: Boolean = false,
-    // Daily target for bookmarks
-    val dailyTargetPages: Float? = null
+    val isSearching: Boolean = false
 )
 
 @HiltViewModel
@@ -83,6 +82,7 @@ class QuranIndexViewModel @Inject constructor(
     init {
         loadData()
         observeReadingBookmarks()
+        observeRecentPages()
         loadDailyTarget()
     }
 
@@ -144,28 +144,38 @@ class QuranIndexViewModel @Inject constructor(
     private fun observeReadingBookmarks() {
         viewModelScope.launch {
             readingBookmarkDao.getAllReadingBookmarks().collect { entities: List<ReadingBookmarkEntity> ->
-                val bookmarks = entities.map { entity: ReadingBookmarkEntity ->
+                val bookmarks = entities.groupBy { it.pageNumber }.map { (page, entries) ->
                     IndexReadingBookmark(
-                        id = entity.id,
-                        pageNumber = entity.pageNumber,
-                        surahName = entity.surahName,
-                        label = entity.label,
-                        createdAt = entity.createdAt
+                        bookmarkIds = entries.map { it.id },
+                        pageNumber = page,
+                        surahName = entries.firstNotNullOfOrNull { it.surahName },
+                        ayahLabels = entries.mapNotNull { e ->
+                            e.ayahNumber?.let { "آية $it" }
+                        },
+                        createdAt = entries.maxOf { it.createdAt }
                     )
-                }
+                }.sortedByDescending { it.createdAt }
                 _state.value = _state.value.copy(readingBookmarks = bookmarks)
-                Timber.d("Loaded ${bookmarks.size} reading bookmarks")
+                Timber.d("Loaded ${bookmarks.size} reading bookmarks (grouped by page)")
             }
         }
     }
 
-    fun deleteReadingBookmark(bookmarkId: String) {
+    private fun observeRecentPages() {
+        viewModelScope.launch {
+            settingsRepository.recentPages.collect { pages ->
+                _state.value = _state.value.copy(recentPages = pages)
+            }
+        }
+    }
+
+    fun deleteReadingBookmarks(bookmarkIds: List<String>) {
         viewModelScope.launch {
             try {
-                readingBookmarkDao.deleteBookmark(bookmarkId)
-                Timber.d("Deleted reading bookmark: $bookmarkId")
+                bookmarkIds.forEach { readingBookmarkDao.deleteBookmark(it) }
+                Timber.d("Deleted ${bookmarkIds.size} reading bookmarks")
             } catch (e: Exception) {
-                Timber.e(e, "Error deleting reading bookmark")
+                Timber.e(e, "Error deleting reading bookmarks")
             }
         }
     }
@@ -267,58 +277,20 @@ class QuranIndexViewModel @Inject constructor(
     }
 
     /**
-     * Load daily target pages needed to finish Quran by end of month
-     * Uses active goal if available, otherwise calculates based on page 1
+     * Load daily target for tracker.
      */
     private fun loadDailyTarget() {
         viewModelScope.launch {
             try {
-                // First, try to get from active goal
                 val activeGoal = trackerRepository.getActiveGoal().first()
-
-                val dailyTarget = if (activeGoal != null) {
-                    // Use goal's daily target
+                if (activeGoal != null) {
                     val goalProgress = trackerRepository.calculateKhatmahProgress(activeGoal.id)
-                    goalProgress?.dailyTargetPages
-                } else {
-                    // Fallback: Calculate based on page 1 and days remaining in Hijri month
-                    calculateFallbackDailyTarget(1)
+                    // dailyTargetPages removed from state — kept for tracker only
                 }
-
-                _state.value = _state.value.copy(dailyTargetPages = dailyTarget)
-                Timber.d("Daily target for bookmarks: ${dailyTarget ?: "N/A"} pages/day")
             } catch (e: Exception) {
                 Timber.e(e, "Error loading daily target")
             }
         }
     }
-
-    /**
-     * Calculate daily target when no goal is set
-     * Based on given page and days remaining in Hijri month
-     */
-    private suspend fun calculateFallbackDailyTarget(currentPage: Int): Float? {
-        return try {
-            // Get current Hijri date
-            val prayerTimes = prayerTimesRepository.getCachedPrayerTimes(java.time.LocalDate.now()).first()
-
-            val hijriDate = prayerTimes?.hijriDate
-                ?: com.quranmedia.player.domain.util.HijriCalendarUtils.gregorianToHijri(java.time.LocalDate.now())
-
-            // Calculate days remaining in month
-            val daysRemaining = com.quranmedia.player.domain.util.HijriCalendarUtils
-                .getDaysRemainingInMonth(hijriDate)
-
-            if (daysRemaining > 0) {
-                // Pages remaining to finish Quran
-                val pagesRemaining = 604 - currentPage
-                pagesRemaining.toFloat() / daysRemaining
-            } else {
-                null
-            }
-        } catch (e: Exception) {
-            Timber.e(e, "Error calculating fallback daily target")
-            null
-        }
-    }
 }
+

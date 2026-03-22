@@ -36,6 +36,9 @@ interface AthkarDao {
     @Query("SELECT * FROM athkar WHERE categoryId = :categoryId ORDER BY `order` ASC")
     fun getAthkarByCategory(categoryId: String): Flow<List<ThikrEntity>>
 
+    @Query("SELECT * FROM athkar WHERE categoryId = :categoryId ORDER BY `order` ASC")
+    suspend fun getAthkarByCategorySync(categoryId: String): List<ThikrEntity>
+
     @Query("SELECT * FROM athkar WHERE id = :id")
     suspend fun getThikrById(id: String): ThikrEntity?
 

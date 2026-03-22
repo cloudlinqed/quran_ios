@@ -25,6 +25,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.quranmedia.player.domain.model.Reciter
 import com.quranmedia.player.domain.model.RevelationType
 import com.quranmedia.player.domain.model.Surah
+import com.quranmedia.player.presentation.theme.AppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,13 +45,6 @@ fun SurahsScreenNew(
             viewModel.selectReciter(reciters[0])
         }
     }
-
-    // Islamic green theme colors
-    val islamicGreen = Color(0xFF2E7D32)
-    val lightGreen = Color(0xFF66BB6A)
-    val darkGreen = Color(0xFF1B5E20)
-    val goldAccent = Color(0xFFFFD700)
-    val creamBackground = Color(0xFFFAF8F3)
 
     Scaffold(
         topBar = {
@@ -75,18 +69,18 @@ fun SurahsScreenNew(
                         Icon(
                             Icons.Default.ArrowBack,
                             "Back",
-                            tint = Color.White
+                            tint = AppTheme.colors.textOnHeader
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = islamicGreen,
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
+                    containerColor = AppTheme.colors.topBarBackground,
+                    titleContentColor = AppTheme.colors.textOnHeader,
+                    navigationIconContentColor = AppTheme.colors.textOnHeader
                 )
             )
         },
-        containerColor = creamBackground
+        containerColor = AppTheme.colors.screenBackground
     ) { paddingValues ->
         if (surahs.isEmpty()) {
             Box(
@@ -99,11 +93,11 @@ fun SurahsScreenNew(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    CircularProgressIndicator(color = islamicGreen)
+                    CircularProgressIndicator(color = AppTheme.colors.islamicGreen)
                     Text(
                         text = "Loading surahs...",
                         style = MaterialTheme.typography.bodyLarge,
-                        color = Color.Gray
+                        color = AppTheme.colors.textSecondary
                     )
                 }
             }
@@ -120,7 +114,7 @@ fun SurahsScreenNew(
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = islamicGreen.copy(alpha = 0.1f)
+                        containerColor = AppTheme.colors.islamicGreen.copy(alpha = 0.1f)
                     )
                 ) {
                     ExposedDropdownMenuBox(
@@ -134,25 +128,25 @@ fun SurahsScreenNew(
                             readOnly = true,
                             label = {
                                 Column {
-                                    Text("القارئ", fontSize = 12.sp, color = islamicGreen)
-                                    Text("Reciter", fontSize = 10.sp, color = darkGreen)
+                                    Text("القارئ", fontSize = 12.sp, color = AppTheme.colors.islamicGreen)
+                                    Text("Reciter", fontSize = 10.sp, color = AppTheme.colors.darkGreen)
                                 }
                             },
                             trailingIcon = {
                                 Icon(
                                     Icons.Default.ArrowDropDown,
                                     contentDescription = "Select Reciter",
-                                    tint = islamicGreen
+                                    tint = AppTheme.colors.islamicGreen
                                 )
                             },
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = islamicGreen,
-                                unfocusedBorderColor = islamicGreen.copy(alpha = 0.5f),
-                                focusedLabelColor = islamicGreen,
-                                unfocusedLabelColor = darkGreen,
-                                focusedTextColor = darkGreen,
-                                unfocusedTextColor = Color.Black,
-                                cursorColor = islamicGreen
+                                focusedBorderColor = AppTheme.colors.islamicGreen,
+                                unfocusedBorderColor = AppTheme.colors.islamicGreen.copy(alpha = 0.5f),
+                                focusedLabelColor = AppTheme.colors.islamicGreen,
+                                unfocusedLabelColor = AppTheme.colors.darkGreen,
+                                focusedTextColor = AppTheme.colors.darkGreen,
+                                unfocusedTextColor = AppTheme.colors.textPrimary,
+                                cursorColor = AppTheme.colors.islamicGreen
                             ),
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -163,7 +157,7 @@ fun SurahsScreenNew(
                         ExposedDropdownMenu(
                             expanded = reciterDropdownExpanded,
                             onDismissRequest = { reciterDropdownExpanded = false },
-                            modifier = Modifier.background(Color.White)
+                            modifier = Modifier.background(AppTheme.colors.cardBackground)
                         ) {
                             reciters.forEach { reciter ->
                                 val isSelected = reciter.id == selectedReciter?.id
@@ -174,13 +168,13 @@ fun SurahsScreenNew(
                                                 text = reciter.name,
                                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                                 fontSize = 15.sp,
-                                                color = if (isSelected) Color.White else darkGreen
+                                                color = if (isSelected) AppTheme.colors.textOnPrimary else AppTheme.colors.darkGreen
                                             )
                                             reciter.nameArabic?.let { arabicName ->
                                                 Text(
                                                     text = arabicName,
                                                     fontSize = 13.sp,
-                                                    color = if (isSelected) lightGreen.copy(alpha = 0.9f) else Color.Gray
+                                                    color = if (isSelected) AppTheme.colors.lightGreen.copy(alpha = 0.9f) else AppTheme.colors.textSecondary
                                                 )
                                             }
                                         }
@@ -190,12 +184,12 @@ fun SurahsScreenNew(
                                         reciterDropdownExpanded = false
                                     },
                                     colors = MenuDefaults.itemColors(
-                                        textColor = darkGreen,
-                                        leadingIconColor = darkGreen,
-                                        disabledTextColor = Color.Gray
+                                        textColor = AppTheme.colors.darkGreen,
+                                        leadingIconColor = AppTheme.colors.darkGreen,
+                                        disabledTextColor = AppTheme.colors.textSecondary
                                     ),
                                     modifier = Modifier.background(
-                                        if (isSelected) islamicGreen else Color.Transparent
+                                        if (isSelected) AppTheme.colors.islamicGreen else Color.Transparent
                                     )
                                 )
                             }
@@ -210,7 +204,7 @@ fun SurahsScreenNew(
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = lightGreen.copy(alpha = 0.2f)
+                        containerColor = AppTheme.colors.lightGreen.copy(alpha = 0.2f)
                     )
                 ) {
                     Row(
@@ -222,7 +216,7 @@ fun SurahsScreenNew(
                         Icon(
                             Icons.Default.Book,
                             contentDescription = null,
-                            tint = islamicGreen,
+                            tint = AppTheme.colors.islamicGreen,
                             modifier = Modifier.size(32.dp)
                         )
                         Spacer(modifier = Modifier.width(12.dp))
@@ -231,12 +225,12 @@ fun SurahsScreenNew(
                                 text = "114 Surahs",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = darkGreen
+                                color = AppTheme.colors.darkGreen
                             )
                             Text(
                                 text = "Select a surah to begin listening",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color.Gray,
+                                color = AppTheme.colors.textSecondary,
                                 fontSize = 12.sp
                             )
                         }
@@ -277,18 +271,13 @@ fun SurahItemNew(
     onClick: () -> Unit,
     isEnabled: Boolean = true
 ) {
-    val islamicGreen = Color(0xFF2E7D32)
-    val lightGreen = Color(0xFF66BB6A)
-    val goldAccent = Color(0xFFFFD700)
-    val darkGreen = Color(0xFF1B5E20)
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(enabled = isEnabled, onClick = onClick),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isEnabled) Color.White else Color.White.copy(alpha = 0.6f)
+            containerColor = if (isEnabled) AppTheme.colors.cardBackground else AppTheme.colors.cardBackground.copy(alpha = 0.6f)
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -304,8 +293,8 @@ fun SurahItemNew(
                     .size(40.dp)
                     .clip(CircleShape)
                     .background(
-                        if (surah.number == 1) goldAccent.copy(alpha = 0.2f)
-                        else lightGreen.copy(alpha = 0.2f)
+                        if (surah.number == 1) AppTheme.colors.goldAccent.copy(alpha = 0.2f)
+                        else AppTheme.colors.lightGreen.copy(alpha = 0.2f)
                     ),
                 contentAlignment = Alignment.Center
             ) {
@@ -314,7 +303,7 @@ fun SurahItemNew(
                     style = MaterialTheme.typography.titleSmall,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    color = if (surah.number == 1) Color(0xFFF57C00) else islamicGreen
+                    color = if (surah.number == 1) Color(0xFFF57C00) else AppTheme.colors.islamicGreen
                 )
             }
 
@@ -327,7 +316,7 @@ fun SurahItemNew(
                     style = MaterialTheme.typography.titleSmall,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color.Black
+                    color = AppTheme.colors.textPrimary
                 )
                 Text(
                     text = "${when (surah.revelationType) {
@@ -336,7 +325,7 @@ fun SurahItemNew(
                     }} • ${surah.ayahCount} ayahs",
                     style = MaterialTheme.typography.bodySmall,
                     fontSize = 11.sp,
-                    color = Color.Gray
+                    color = AppTheme.colors.textSecondary
                 )
             }
 
@@ -348,7 +337,7 @@ fun SurahItemNew(
                 style = MaterialTheme.typography.titleMedium,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = islamicGreen
+                color = AppTheme.colors.islamicGreen
             )
         }
     }

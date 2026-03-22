@@ -20,6 +20,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
@@ -31,6 +33,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
@@ -51,6 +55,7 @@ import com.quranmedia.player.data.repository.AppLanguage
 import com.quranmedia.player.domain.model.TafseerContent
 import com.quranmedia.player.domain.model.TafseerInfo
 import com.quranmedia.player.domain.model.TafseerType
+import com.quranmedia.player.presentation.theme.AppTheme
 
 /**
  * State for the Tafseer Modal
@@ -71,12 +76,8 @@ data class TafseerModalState(
     val error: String? = null
 )
 
-// Custom colors for the tafseer modal
-private val tafseerCardBackground = Color(0xFFFAF8F5) // Warm off-white
+// Custom colors for the tafseer modal (non-theme colors kept locally)
 private val tafseerHeaderBackground = Color(0xFFF5F0E8) // Slightly darker cream
-private val tafseerAccent = Color(0xFF2E7D32) // Deep green
-private val tafseerGold = Color(0xFFD4AF37) // Gold accent
-private val tafseerTextPrimary = Color(0xFF3E2723) // Coffee brown
 private val tafseerTextSecondary = Color(0xFF6D4C41) // Lighter brown
 
 /**
@@ -190,7 +191,9 @@ fun TafseerModal(
     onSelectTafseer: (String) -> Unit,
     onCopy: (String) -> Unit,
     onDownloadTafseer: (String) -> Unit = {},
-    onNavigateToDownload: () -> Unit = {}
+    onNavigateToDownload: () -> Unit = {},
+    onPreviousAyah: (() -> Unit)? = null,
+    onNextAyah: (() -> Unit)? = null
 ) {
     val clipboardManager = LocalClipboardManager.current
     val scrollState = rememberScrollState()
@@ -240,6 +243,12 @@ fun TafseerModal(
                     modifier = Modifier
                         .fillMaxWidth(0.9f)
                         .fillMaxHeight(0.55f)
+                        .semantics {
+                            this.contentDescription = if (language == AppLanguage.ARABIC)
+                                "نافذة التفسير، سورة ${state.surahName} آية ${state.ayah}"
+                            else
+                                "Tafseer dialog, Surah ${state.surahName} Ayah ${state.ayah}"
+                        }
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
@@ -252,19 +261,21 @@ fun TafseerModal(
                         ),
                     shape = RoundedCornerShape(24.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = tafseerCardBackground.copy(alpha = 0.97f)
+                        containerColor = AppTheme.colors.screenBackground.copy(alpha = 0.97f)
                     )
                 ) {
                     Column(
                         modifier = Modifier.fillMaxSize()
                     ) {
-                        // Header with gradient
+                        // Header with gradient + prev/next navigation
                         TafseerModalHeader(
                             surah = state.surah,
                             ayah = state.ayah,
                             surahName = state.surahName,
                             language = language,
-                            onClose = onDismiss
+                            onClose = onDismiss,
+                            onPreviousAyah = onPreviousAyah,
+                            onNextAyah = onNextAyah
                         )
 
                         // Tafseer Selector - show all tafseers with download option
@@ -293,7 +304,7 @@ fun TafseerModal(
                                         horizontalAlignment = Alignment.CenterHorizontally
                                     ) {
                                         CircularProgressIndicator(
-                                            color = tafseerAccent,
+                                            color = AppTheme.colors.islamicGreen,
                                             strokeWidth = 3.dp,
                                             modifier = Modifier.size(36.dp)
                                         )
@@ -324,12 +335,19 @@ fun TafseerModal(
                                                 .verticalScroll(scrollState)
                                                 .padding(horizontal = 16.dp, vertical = 12.dp)
                                         ) {
-                                            // Ayah text card
+                                            // Ayah text card — focusable for TalkBack
                                             Card(
-                                                modifier = Modifier.fillMaxWidth(),
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .semantics {
+                                                        this.contentDescription = if (language == AppLanguage.ARABIC)
+                                                            "نص الآية: ${state.ayahText}"
+                                                        else
+                                                            "Ayah text: ${state.ayahText}"
+                                                    },
                                                 shape = RoundedCornerShape(16.dp),
                                                 colors = CardDefaults.cardColors(
-                                                    containerColor = Color.White.copy(alpha = 0.7f)
+                                                    containerColor = AppTheme.colors.cardBackground.copy(alpha = 0.7f)
                                                 ),
                                                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                                             ) {
@@ -338,7 +356,7 @@ fun TafseerModal(
                                                         .fillMaxWidth()
                                                         .border(
                                                             width = 1.dp,
-                                                            color = tafseerGold.copy(alpha = 0.3f),
+                                                            color = AppTheme.colors.goldAccent.copy(alpha = 0.3f),
                                                             shape = RoundedCornerShape(16.dp)
                                                         )
                                                         .padding(16.dp)
@@ -349,7 +367,7 @@ fun TafseerModal(
                                                             fontFamily = scheherazadeFont,
                                                             fontSize = 20.sp,
                                                             fontWeight = FontWeight.Medium,
-                                                            color = tafseerAccent,
+                                                            color = AppTheme.colors.islamicGreen,
                                                             textAlign = TextAlign.Center,
                                                             lineHeight = 34.sp,
                                                             modifier = Modifier.fillMaxWidth()
@@ -365,7 +383,7 @@ fun TafseerModal(
                                                 modifier = Modifier.fillMaxWidth(),
                                                 shape = RoundedCornerShape(16.dp),
                                                 colors = CardDefaults.cardColors(
-                                                    containerColor = Color.White.copy(alpha = 0.5f)
+                                                    containerColor = AppTheme.colors.cardBackground.copy(alpha = 0.5f)
                                                 ),
                                                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                                             ) {
@@ -381,8 +399,8 @@ fun TafseerModal(
                                                     ) {
                                                         Icon(
                                                             Icons.Rounded.MenuBook,
-                                                            contentDescription = null,
-                                                            tint = tafseerGold,
+                                                            contentDescription = "",
+                                                            tint = AppTheme.colors.goldAccent,
                                                             modifier = Modifier.size(18.dp)
                                                         )
                                                         Spacer(modifier = Modifier.width(8.dp))
@@ -393,7 +411,7 @@ fun TafseerModal(
                                                                 selectedTafseer.first.nameEnglish,
                                                             fontSize = 13.sp,
                                                             fontWeight = FontWeight.SemiBold,
-                                                            color = tafseerGold,
+                                                            color = AppTheme.colors.goldAccent,
                                                             fontFamily = if (selectedTafseer.first.language == "arabic") scheherazadeFont else null
                                                         )
                                                     }
@@ -411,10 +429,10 @@ fun TafseerModal(
                                                     if (isWordMeaning) {
                                                         // Word meanings: show Quran word in bold
                                                         Text(
-                                                            text = formatWordMeanings(cleanedText, tafseerAccent),
+                                                            text = formatWordMeanings(cleanedText, AppTheme.colors.islamicGreen),
                                                             fontFamily = scheherazadeFont,
                                                             fontSize = 17.sp,
-                                                            color = tafseerTextPrimary,
+                                                            color = AppTheme.colors.textPrimary,
                                                             lineHeight = 30.sp,
                                                             textAlign = TextAlign.Start,
                                                             modifier = Modifier.fillMaxWidth()
@@ -425,7 +443,7 @@ fun TafseerModal(
                                                             text = cleanedText,
                                                             fontFamily = if (useArabicStyle) scheherazadeFont else null,
                                                             fontSize = if (useArabicStyle) 17.sp else 15.sp,
-                                                            color = tafseerTextPrimary,
+                                                            color = AppTheme.colors.textPrimary,
                                                             lineHeight = if (useArabicStyle) 30.sp else 24.sp,
                                                             textAlign = TextAlign.Start,
                                                             modifier = Modifier.fillMaxWidth()
@@ -495,14 +513,14 @@ fun TafseerModal(
                                     Icon(
                                         Icons.Default.ContentCopy,
                                         contentDescription = "Copy",
-                                        tint = tafseerAccent,
+                                        tint = AppTheme.colors.islamicGreen,
                                         modifier = Modifier.size(18.dp)
                                     )
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text(
                                         text = if (language == AppLanguage.ARABIC) "نسخ" else "Copy",
                                         fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
-                                        color = tafseerAccent,
+                                        color = AppTheme.colors.islamicGreen,
                                         fontWeight = FontWeight.Medium,
                                         fontSize = 14.sp
                                     )
@@ -522,49 +540,48 @@ private fun TafseerModalHeader(
     ayah: Int,
     surahName: String,
     language: AppLanguage,
-    onClose: () -> Unit
+    onClose: () -> Unit,
+    onPreviousAyah: (() -> Unit)? = null,
+    onNextAyah: (() -> Unit)? = null
 ) {
-    Box(
+    val isArabic = language == AppLanguage.ARABIC
+
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
                         tafseerHeaderBackground,
-                        tafseerCardBackground.copy(alpha = 0.5f)
+                        AppTheme.colors.screenBackground.copy(alpha = 0.5f)
                     )
                 )
             )
-            .padding(horizontal = 16.dp, vertical = 14.dp)
     ) {
+        // Top row: title + close
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 8.dp, top = 14.dp, bottom = 4.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Title
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = if (language == AppLanguage.ARABIC)
-                        "تفسير الآية $ayah"
-                    else
-                        "Tafseer - Ayah $ayah",
-                    fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
+                    text = if (isArabic) "تفسير الآية $ayah" else "Tafseer - Ayah $ayah",
+                    fontFamily = if (isArabic) scheherazadeFont else null,
                     fontSize = 17.sp,
                     fontWeight = FontWeight.Bold,
-                    color = tafseerAccent
+                    color = AppTheme.colors.islamicGreen
                 )
                 Text(
                     text = surahName,
-                    fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
+                    fontFamily = if (isArabic) scheherazadeFont else null,
                     fontSize = 13.sp,
                     color = tafseerTextSecondary
                 )
             }
 
-            // Close button
             IconButton(
                 onClick = onClose,
                 modifier = Modifier
@@ -574,10 +591,59 @@ private fun TafseerModalHeader(
             ) {
                 Icon(
                     Icons.Default.Close,
-                    contentDescription = "Close",
+                    contentDescription = if (isArabic) "إغلاق" else "Close",
                     tint = tafseerTextSecondary,
                     modifier = Modifier.size(18.dp)
                 )
+            }
+        }
+
+        // Prev / Next ayah navigation row
+        if (onPreviousAyah != null || onNextAyah != null) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextButton(
+                    onClick = { onPreviousAyah?.invoke() },
+                    enabled = onPreviousAyah != null && ayah > 1,
+                    modifier = Modifier.semantics {
+                        this.contentDescription = if (isArabic) "الآية السابقة" else "Previous ayah"
+                    }
+                ) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        text = if (isArabic) "الآية السابقة" else "Previous",
+                        fontSize = 12.sp
+                    )
+                }
+
+                TextButton(
+                    onClick = { onNextAyah?.invoke() },
+                    enabled = onNextAyah != null,
+                    modifier = Modifier.semantics {
+                        this.contentDescription = if (isArabic) "الآية التالية" else "Next ayah"
+                    }
+                ) {
+                    Text(
+                        text = if (isArabic) "الآية التالية" else "Next",
+                        fontSize = 12.sp
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
             }
         }
     }
@@ -625,7 +691,7 @@ private fun TafseerSelector(
                     Icon(
                         Icons.Rounded.MenuBook,
                         contentDescription = null,
-                        tint = tafseerAccent,
+                        tint = AppTheme.colors.islamicGreen,
                         modifier = Modifier.size(20.dp)
                     )
 
@@ -637,11 +703,11 @@ private fun TafseerSelector(
                             text = if (isArabic) "ع" else "EN",
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
-                            color = if (isArabic) tafseerGold else tafseerAccent,
+                            color = if (isArabic) AppTheme.colors.goldAccent else AppTheme.colors.islamicGreen,
                             modifier = Modifier
                                 .background(
-                                    color = if (isArabic) tafseerGold.copy(alpha = 0.15f)
-                                    else tafseerAccent.copy(alpha = 0.1f),
+                                    color = if (isArabic) AppTheme.colors.goldAccent.copy(alpha = 0.15f)
+                                    else AppTheme.colors.islamicGreen.copy(alpha = 0.1f),
                                     shape = RoundedCornerShape(4.dp)
                                 )
                                 .padding(horizontal = 5.dp, vertical = 2.dp)
@@ -653,7 +719,7 @@ private fun TafseerSelector(
                             fontFamily = if (isArabic) scheherazadeFont else null,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
-                            color = tafseerTextPrimary,
+                            color = AppTheme.colors.textPrimary,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -666,7 +732,7 @@ private fun TafseerSelector(
                         CircularProgressIndicator(
                             progress = { downloadProgress },
                             modifier = Modifier.size(22.dp),
-                            color = tafseerAccent,
+                            color = AppTheme.colors.islamicGreen,
                             strokeWidth = 2.dp
                         )
                     } else {
@@ -677,7 +743,7 @@ private fun TafseerSelector(
                             Icon(
                                 Icons.Default.Download,
                                 contentDescription = "Download",
-                                tint = tafseerAccent,
+                                tint = AppTheme.colors.islamicGreen,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -702,7 +768,7 @@ private fun TafseerSelector(
             onDismissRequest = { expanded = false },
             modifier = Modifier
                 .fillMaxWidth(0.85f)
-                .background(Color.White, RoundedCornerShape(12.dp))
+                .background(AppTheme.colors.cardBackground, RoundedCornerShape(12.dp))
         ) {
             // Tafseers first
             val tafseerItems = tafseers.filter { it.type == TafseerType.TAFSEER }
@@ -726,7 +792,7 @@ private fun TafseerSelector(
 
             // Divider before word meanings / grammar
             if (wordAndGrammar.isNotEmpty() && tafseerItems.isNotEmpty()) {
-                HorizontalDivider(color = Color.Gray.copy(alpha = 0.2f))
+                HorizontalDivider(color = AppTheme.colors.divider)
             }
 
             wordAndGrammar.forEach { tafseer ->
@@ -780,11 +846,11 @@ private fun TafseerDropdownItem(
                     },
                     fontSize = 9.sp,
                     fontWeight = FontWeight.Bold,
-                    color = if (isArabic || tafseer.type == TafseerType.GRAMMAR) tafseerGold else tafseerAccent,
+                    color = if (isArabic || tafseer.type == TafseerType.GRAMMAR) AppTheme.colors.goldAccent else AppTheme.colors.islamicGreen,
                     modifier = Modifier
                         .background(
-                            color = if (isArabic || tafseer.type == TafseerType.GRAMMAR) tafseerGold.copy(alpha = 0.15f)
-                            else tafseerAccent.copy(alpha = 0.1f),
+                            color = if (isArabic || tafseer.type == TafseerType.GRAMMAR) AppTheme.colors.goldAccent.copy(alpha = 0.15f)
+                            else AppTheme.colors.islamicGreen.copy(alpha = 0.1f),
                             shape = RoundedCornerShape(4.dp)
                         )
                         .padding(horizontal = 5.dp, vertical = 2.dp)
@@ -797,7 +863,7 @@ private fun TafseerDropdownItem(
                     fontSize = 13.sp,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                     color = if (!isDownloaded) tafseerTextSecondary
-                    else if (isSelected) tafseerAccent else tafseerTextPrimary,
+                    else if (isSelected) AppTheme.colors.islamicGreen else AppTheme.colors.textPrimary,
                     modifier = Modifier.weight(1f)
                 )
 
@@ -807,7 +873,7 @@ private fun TafseerDropdownItem(
                         CircularProgressIndicator(
                             progress = { downloadProgress },
                             modifier = Modifier.size(16.dp),
-                            color = tafseerAccent,
+                            color = AppTheme.colors.islamicGreen,
                             strokeWidth = 2.dp
                         )
                     }
@@ -815,7 +881,7 @@ private fun TafseerDropdownItem(
                         Icon(
                             Icons.Default.Check,
                             contentDescription = null,
-                            tint = tafseerAccent,
+                            tint = AppTheme.colors.islamicGreen,
                             modifier = Modifier.size(16.dp)
                         )
                     }
@@ -832,7 +898,7 @@ private fun TafseerDropdownItem(
         },
         modifier = Modifier.background(
             when {
-                isSelected && isDownloaded -> tafseerAccent.copy(alpha = 0.08f)
+                isSelected && isDownloaded -> AppTheme.colors.islamicGreen.copy(alpha = 0.08f)
                 shadedBackground -> tafseerHeaderBackground.copy(alpha = 0.5f)
                 else -> Color.Transparent
             }

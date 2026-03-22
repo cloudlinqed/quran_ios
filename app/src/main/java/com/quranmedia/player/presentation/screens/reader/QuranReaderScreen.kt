@@ -66,6 +66,8 @@ import com.quranmedia.player.presentation.screens.reader.components.surahNamesAr
 import com.quranmedia.player.presentation.screens.reader.components.TafseerModal
 import com.quranmedia.player.presentation.screens.reader.components.TafseerModalState
 import com.quranmedia.player.data.QuranMetadata
+import com.quranmedia.player.presentation.components.DarkModeToggle
+import com.quranmedia.player.presentation.theme.AppTheme
 import com.quranmedia.player.presentation.theme.ReadingThemeColors
 import com.quranmedia.player.presentation.theme.ReadingThemes
 import com.quranmedia.player.domain.util.ArabicNumeralUtils
@@ -91,6 +93,7 @@ fun QuranReaderScreen(
     initialReciterId: String? = null,
     highlightSurahNumber: Int? = null,
     highlightAyahNumber: Int? = null,
+    onToggleDarkMode: () -> Unit = {},
     viewModel: QuranReaderViewModel = hiltViewModel(),
     onBack: () -> Unit,
     onNavigateToIndex: () -> Unit = {},
@@ -101,6 +104,7 @@ fun QuranReaderScreen(
     onNavigateToDownloads: () -> Unit = {},
     onNavigateToAbout: () -> Unit = {},
     onNavigateToImsakiya: () -> Unit = {},  // TODO: Remove after Ramadan
+    onNavigateToHadith: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
     val playbackState by viewModel.playbackState.collectAsState()
@@ -428,6 +432,7 @@ fun QuranReaderScreen(
                             pageData = svgPageData,
                             ayahs = pageAyahs,
                             highlightedAyah = state.highlightedAyah,
+                            bookmarkedAyahHighlights = state.bookmarkedAyahs,
                             readingTheme = readingTheme,
                             customBackgroundColor = if (readingTheme == com.quranmedia.player.data.repository.ReadingTheme.CUSTOM)
                                 Color((settings.customBackgroundColor and 0xFFFFFFFF).toInt()) else null,
@@ -468,6 +473,7 @@ fun QuranReaderScreen(
                             useBoldFont = settings.useBoldFont,
                             ayahs = pageAyahs,
                             highlightedAyah = state.highlightedAyah,
+                            bookmarkedAyahHighlights = state.bookmarkedAyahs,
                             readingTheme = readingTheme,
                             customBackgroundColor = if (readingTheme == com.quranmedia.player.data.repository.ReadingTheme.CUSTOM)
                                 Color((settings.customBackgroundColor and 0xFFFFFFFF).toInt()) else null,
@@ -492,6 +498,7 @@ fun QuranReaderScreen(
                             pageNumber = realPageNumber,
                             ayahs = pageAyahs,
                             highlightedAyah = state.highlightedAyah,
+                            bookmarkedAyahHighlights = state.bookmarkedAyahs,
                             modifier = Modifier.fillMaxSize(),
                             zoomMode = zoomMode,
                             splitHalf = if (showSecondHalf) 1 else 0,  // 0 = first half, 1 = second half
@@ -614,6 +621,78 @@ fun QuranReaderScreen(
                         }
                     },
                     actions = {
+                        // Theme picker dropdown
+                        var showThemeMenu by remember { mutableStateOf(false) }
+                        Box {
+                            IconButton(
+                                onClick = { showThemeMenu = true },
+                                modifier = Modifier.size(36.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.Palette,
+                                    contentDescription = if (language == AppLanguage.ARABIC) "المظهر" else "Theme",
+                                    tint = themeColors.topBarContent,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = showThemeMenu,
+                                onDismissRequest = { showThemeMenu = false }
+                            ) {
+                                // Reading themes (exclude Custom)
+                                com.quranmedia.player.data.repository.ReadingTheme.entries
+                                    .filter { it != com.quranmedia.player.data.repository.ReadingTheme.CUSTOM }
+                                    .forEach { theme ->
+                                        val isSelected = settings.readingTheme == theme
+                                        DropdownMenuItem(
+                                            text = {
+                                                Text(
+                                                    theme.getLabel(language),
+                                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                                    color = if (isSelected) AppTheme.colors.goldAccent else Color.Unspecified
+                                                )
+                                            },
+                                            onClick = {
+                                                viewModel.setReadingTheme(theme)
+                                                showThemeMenu = false
+                                            },
+                                            leadingIcon = if (isSelected) {
+                                                { Icon(Icons.Default.Check, null, tint = AppTheme.colors.goldAccent, modifier = Modifier.size(16.dp)) }
+                                            } else null
+                                        )
+                                    }
+                                HorizontalDivider()
+                                // Dark mode options
+                                com.quranmedia.player.data.repository.DarkModePreference.entries.forEach { pref ->
+                                    val isSelected = settings.darkModePreference == pref
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(
+                                                pref.getLabel(language),
+                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                                color = if (isSelected) AppTheme.colors.goldAccent else Color.Unspecified
+                                            )
+                                        },
+                                        onClick = {
+                                            viewModel.setDarkModePreference(pref)
+                                            showThemeMenu = false
+                                        },
+                                        leadingIcon = {
+                                            Icon(
+                                                when (pref) {
+                                                    com.quranmedia.player.data.repository.DarkModePreference.OFF -> Icons.Default.LightMode
+                                                    com.quranmedia.player.data.repository.DarkModePreference.ON -> Icons.Default.DarkMode
+                                                    com.quranmedia.player.data.repository.DarkModePreference.AUTO -> Icons.Default.Settings
+                                                },
+                                                null,
+                                                tint = if (isSelected) AppTheme.colors.goldAccent else Color.Unspecified,
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                        }
+                                    )
+                                }
+                            }
+                        }
                         // Download button - only show when there's active playback
                         if (playbackState.currentSurah != null) {
                             val currentDownloadState = downloadState
@@ -641,17 +720,7 @@ fun QuranReaderScreen(
                                 }
                             }
                         }
-                        IconButton(onClick = { viewModel.toggleBookmarkCurrentPage() }) {
-                            Icon(
-                                if (state.isCurrentPageBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                                contentDescription = if (language == AppLanguage.ARABIC) {
-                                    if (state.isCurrentPageBookmarked) "إزالة العلامة المرجعية" else "إضافة علامة مرجعية"
-                                } else {
-                                    if (state.isCurrentPageBookmarked) "Remove bookmark" else "Add bookmark"
-                                },
-                                tint = if (state.isCurrentPageBookmarked) themeColors.highlight else themeColors.topBarContent
-                            )
-                        }
+                        // Page bookmark removed — bookmarking is now ayah-level via long-press menu
                         // Hide zoom button in QCF mode (split doesn't work with per-page fonts)
                         if (!isQCFModeActive) {
                             IconButton(onClick = {
@@ -802,22 +871,23 @@ fun QuranReaderScreen(
                                         Icon(Icons.Default.CloudDownload, contentDescription = if (language == AppLanguage.ARABIC) "التحميلات" else "Downloads")
                                     }
                                 )
-                                // Ramadan Imsakiya (TODO: Remove after Ramadan)
+                                // Hadith Library
                                 DropdownMenuItem(
                                     text = {
                                         Text(
-                                            if (language == AppLanguage.ARABIC) "إمساكية رمضان" else "Ramadan Imsakiya",
+                                            if (language == AppLanguage.ARABIC) "المكتبة الحديثية" else "Hadith Library",
                                             fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null
                                         )
                                     },
                                     onClick = {
                                         showOverflowMenu = false
-                                        onNavigateToImsakiya()
+                                        onNavigateToHadith()
                                     },
                                     leadingIcon = {
-                                        Icon(Icons.Default.NightsStay, contentDescription = if (language == AppLanguage.ARABIC) "إمساكية رمضان" else "Ramadan Imsakiya")
+                                        Icon(Icons.Default.MenuBook, contentDescription = if (language == AppLanguage.ARABIC) "المكتبة الحديثية" else "Hadith Library")
                                     }
                                 )
+                                // Ramadan Imsakiya — hidden until next Ramadan
                                 // About
                                 DropdownMenuItem(
                                     text = {
@@ -980,7 +1050,13 @@ fun QuranReaderScreen(
                 ) {
                     Surface(
                         modifier = Modifier
-                            .offset { IntOffset(menuX, menuY) },
+                            .offset { IntOffset(menuX, menuY) }
+                            .semantics {
+                                this.contentDescription = if (language == AppLanguage.ARABIC)
+                                    "قائمة الآية ${selectedAyah?.ayahNumber ?: ""}: تشغيل، نسخ، علامة، تفسير، تلاوة"
+                                else
+                                    "Ayah ${selectedAyah?.ayahNumber ?: ""} menu: Play, Copy, Bookmark, Tafseer, Recitation"
+                            },
                         shape = RoundedCornerShape(24.dp),
                         color = Color.White,
                         shadowElevation = 8.dp
@@ -999,11 +1075,11 @@ fun QuranReaderScreen(
                                     showAyahMenu = false
                                     selectedAyah = null
                                 },
-                                modifier = Modifier.size(40.dp)
+                                modifier = Modifier.size(44.dp)
                             ) {
                                 Icon(
                                     Icons.Default.PlayArrow,
-                                    contentDescription = if (language == AppLanguage.ARABIC) "تشغيل" else "Play",
+                                    contentDescription = if (language == AppLanguage.ARABIC) "تشغيل من هذه الآية" else "Play from this ayah",
                                     tint = themeColors.accent,
                                     modifier = Modifier.size(22.dp)
                                 )
@@ -1018,29 +1094,36 @@ fun QuranReaderScreen(
                                     showAyahMenu = false
                                     selectedAyah = null
                                 },
-                                modifier = Modifier.size(40.dp)
+                                modifier = Modifier.size(44.dp)
                             ) {
                                 Icon(
                                     Icons.Default.ContentCopy,
-                                    contentDescription = if (language == AppLanguage.ARABIC) "نسخ" else "Copy",
+                                    contentDescription = if (language == AppLanguage.ARABIC) "نسخ نص الآية" else "Copy ayah text",
                                     tint = themeColors.accent,
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
 
-                            // Bookmark button
+                            // Bookmark ayah — highlights it and saves to bookmarks
+                            val isThisAyahBookmarked = selectedAyah?.let { sa ->
+                                state.bookmarkedAyahs.any { it.surahNumber == sa.surahNumber && it.ayahNumber == sa.ayahNumber }
+                            } ?: false
                             IconButton(
                                 onClick = {
-                                    viewModel.toggleBookmarkCurrentPage()
+                                    selectedAyah?.let { viewModel.toggleBookmarkAyah(it) }
                                     showAyahMenu = false
                                     selectedAyah = null
                                 },
-                                modifier = Modifier.size(40.dp)
+                                modifier = Modifier.size(44.dp)
                             ) {
                                 Icon(
-                                    if (state.isCurrentPageBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                                    contentDescription = if (language == AppLanguage.ARABIC) "علامة مرجعية" else "Bookmark",
-                                    tint = if (state.isCurrentPageBookmarked) themeColors.highlight else themeColors.accent,
+                                    if (isThisAyahBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                                    contentDescription = if (language == AppLanguage.ARABIC) {
+                                        if (isThisAyahBookmarked) "إزالة علامة الآية" else "حفظ علامة الآية"
+                                    } else {
+                                        if (isThisAyahBookmarked) "Remove ayah bookmark" else "Bookmark this ayah"
+                                    },
+                                    tint = if (isThisAyahBookmarked) themeColors.highlight else themeColors.accent,
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
@@ -1054,11 +1137,11 @@ fun QuranReaderScreen(
                                     showAyahMenu = false
                                     selectedAyah = null
                                 },
-                                modifier = Modifier.size(40.dp)
+                                modifier = Modifier.size(44.dp)
                             ) {
                                 Icon(
                                     Icons.Default.MenuBook,
-                                    contentDescription = if (language == AppLanguage.ARABIC) "تفسير" else "Tafseer",
+                                    contentDescription = if (language == AppLanguage.ARABIC) "عرض التفسير" else "Show Tafseer",
                                     tint = themeColors.accent,
                                     modifier = Modifier.size(20.dp)
                                 )
@@ -1070,7 +1153,7 @@ fun QuranReaderScreen(
                                     showAyahMenu = false
                                     showCustomRecitationDialog = true
                                 },
-                                modifier = Modifier.size(40.dp)
+                                modifier = Modifier.size(44.dp)
                             ) {
                                 Icon(
                                     Icons.Default.Repeat,
@@ -1145,7 +1228,9 @@ fun QuranReaderScreen(
         onSelectTafseer = { tafseerId -> viewModel.selectTafseer(tafseerId) },
         onCopy = { /* Toast or snackbar can be added here */ },
         onDownloadTafseer = { tafseerId -> viewModel.downloadTafseerFromModal(tafseerId) },
-        onNavigateToDownload = onNavigateToSettings
+        onNavigateToDownload = onNavigateToSettings,
+        onPreviousAyah = { viewModel.showTafseerPreviousAyah() },
+        onNextAyah = { viewModel.showTafseerNextAyah() }
     )
 }
 

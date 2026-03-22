@@ -34,6 +34,7 @@ data class AthanSettingsUiState(
     val downloadingAthanId: String? = null,
     val previewingAthanId: String? = null,
     val athanMaxVolume: Boolean = true,
+    val athanInSilentMode: Boolean = false,
     val flipToSilence: Boolean = true,
     // Per-prayer settings (default ATHAN with Abdulbasit)
     val fajrMode: PrayerNotificationMode = PrayerNotificationMode.ATHAN,
@@ -115,6 +116,7 @@ class AthanSettingsViewModel @Inject constructor(
                 language = settings.appLanguage,
                 useIndoArabicNumerals = settings.useIndoArabicNumerals,
                 athanMaxVolume = settings.athanMaxVolume,
+                athanInSilentMode = settings.athanInSilentMode,
                 flipToSilence = settings.flipToSilenceAthan,
                 fajrMode = settings.fajrNotificationMode,
                 dhuhrMode = settings.dhuhrNotificationMode,
@@ -270,6 +272,13 @@ class AthanSettingsViewModel @Inject constructor(
         viewModelScope.launch {
             settingsRepository.setAthanMaxVolume(enabled)
             _uiState.value = _uiState.value.copy(athanMaxVolume = enabled)
+        }
+    }
+
+    fun setAthanInSilentMode(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setAthanInSilentMode(enabled)
+            _uiState.value = _uiState.value.copy(athanInSilentMode = enabled)
         }
     }
 

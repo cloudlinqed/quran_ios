@@ -10,6 +10,7 @@ data class ReadingBookmarkEntity(
     val id: String = UUID.randomUUID().toString(),
     val pageNumber: Int,
     val surahNumber: Int?,
+    val ayahNumber: Int? = null,
     val surahName: String?,
     val label: String?,
     val createdAt: Long = System.currentTimeMillis()

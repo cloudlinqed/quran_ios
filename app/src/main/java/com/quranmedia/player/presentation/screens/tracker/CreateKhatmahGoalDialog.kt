@@ -14,8 +14,7 @@ import androidx.compose.ui.window.Dialog
 import com.quranmedia.player.data.repository.AppLanguage
 import com.quranmedia.player.domain.model.GoalType
 import com.quranmedia.player.presentation.screens.reader.components.scheherazadeFont
-import com.quranmedia.player.presentation.screens.reader.components.islamicGreen
-import com.quranmedia.player.presentation.screens.reader.components.darkGreen
+import com.quranmedia.player.presentation.theme.AppTheme
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -68,7 +67,7 @@ fun CreateKhatmahGoalDialog(
                 .fillMaxWidth()
                 .padding(16.dp),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+            colors = CardDefaults.cardColors(containerColor = AppTheme.colors.cardBackground)
         ) {
             Column(
                 modifier = Modifier
@@ -81,7 +80,7 @@ fun CreateKhatmahGoalDialog(
                     text = if (language == AppLanguage.ARABIC) "إنشاء هدف ختمة" else "Create Khatmah Goal",
                     fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                     fontSize = 22.sp,
-                    color = darkGreen
+                    color = AppTheme.colors.darkGreen
                 )
 
                 // Goal Type Dropdown
@@ -101,7 +100,7 @@ fun CreateKhatmahGoalDialog(
                                 Text(
                                     text = if (language == AppLanguage.ARABIC) "نوع الهدف" else "Goal Type",
                                     fontSize = 12.sp,
-                                    color = Color.Gray
+                                    color = AppTheme.colors.textSecondary
                                 )
                                 Text(
                                     text = if (language == AppLanguage.ARABIC)
@@ -110,7 +109,7 @@ fun CreateKhatmahGoalDialog(
                                         selectedGoalType.nameEnglish,
                                     fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                                     fontSize = 16.sp,
-                                    color = Color.DarkGray
+                                    color = AppTheme.colors.textPrimary
                                 )
                             }
                             Icon(Icons.Default.ArrowDropDown, contentDescription = null)
@@ -151,8 +150,8 @@ fun CreateKhatmahGoalDialog(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = islamicGreen,
-                        focusedLabelColor = islamicGreen
+                        focusedBorderColor = AppTheme.colors.islamicGreen,
+                        focusedLabelColor = AppTheme.colors.islamicGreen
                     )
                 )
 
@@ -175,8 +174,8 @@ fun CreateKhatmahGoalDialog(
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = islamicGreen,
-                            focusedLabelColor = islamicGreen
+                            focusedBorderColor = AppTheme.colors.islamicGreen,
+                            focusedLabelColor = AppTheme.colors.islamicGreen
                         )
                     )
                 }
@@ -199,24 +198,24 @@ fun CreateKhatmahGoalDialog(
                                 Text(
                                     text = if (language == AppLanguage.ARABIC) "تاريخ البدء" else "Start Date",
                                     fontSize = 12.sp,
-                                    color = Color.Gray
+                                    color = AppTheme.colors.textSecondary
                                 )
                                 Text(
                                     text = startDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                                     fontSize = 16.sp,
-                                    color = Color.DarkGray
+                                    color = AppTheme.colors.textPrimary
                                 )
                             }
                             Column(horizontalAlignment = androidx.compose.ui.Alignment.End) {
                                 Text(
                                     text = if (language == AppLanguage.ARABIC) "تاريخ الانتهاء" else "End Date",
                                     fontSize = 12.sp,
-                                    color = Color.Gray
+                                    color = AppTheme.colors.textSecondary
                                 )
                                 Text(
                                     text = endDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                                     fontSize = 16.sp,
-                                    color = Color.DarkGray
+                                    color = AppTheme.colors.textPrimary
                                 )
                             }
                         }
@@ -227,7 +226,7 @@ fun CreateKhatmahGoalDialog(
                             else
                                 "${java.time.temporal.ChronoUnit.DAYS.between(startDate, endDate)} days",
                             fontSize = 14.sp,
-                            color = islamicGreen
+                            color = AppTheme.colors.islamicGreen
                         )
                     }
                 }
@@ -239,7 +238,7 @@ fun CreateKhatmahGoalDialog(
                     else
                         "Your progress will be tracked for reading 604 pages during this period",
                     fontSize = 12.sp,
-                    color = Color.Gray
+                    color = AppTheme.colors.textSecondary
                 )
 
                 // Action Buttons
@@ -263,7 +262,7 @@ fun CreateKhatmahGoalDialog(
                             }
                         },
                         modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(containerColor = islamicGreen),
+                        colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.islamicGreen),
                         enabled = goalName.isNotBlank() &&
                             (selectedGoalType == GoalType.MONTHLY ||
                              (numberOfDays.toIntOrNull() ?: 0) > 0)

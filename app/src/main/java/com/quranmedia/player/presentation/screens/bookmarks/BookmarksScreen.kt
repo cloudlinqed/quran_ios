@@ -22,15 +22,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.quranmedia.player.data.database.entity.ReadingBookmarkEntity
 import com.quranmedia.player.data.repository.AppLanguage
 import com.quranmedia.player.presentation.screens.reader.components.scheherazadeFont
-import com.quranmedia.player.presentation.screens.reader.components.islamicGreen
-import com.quranmedia.player.presentation.screens.reader.components.darkGreen
-import com.quranmedia.player.presentation.screens.reader.components.creamBackground
-import com.quranmedia.player.presentation.screens.reader.components.coffeeBrown
+import com.quranmedia.player.presentation.theme.AppTheme
 import com.quranmedia.player.presentation.util.layoutDirection
-import com.quranmedia.player.presentation.components.CommonOverflowMenu
+import com.quranmedia.player.presentation.components.BottomNavBar
+import com.quranmedia.player.presentation.components.DarkModeToggle
 import com.quranmedia.player.domain.util.ArabicNumeralUtils
 import java.text.SimpleDateFormat
 import java.util.*
@@ -39,16 +36,20 @@ import java.util.*
 @Composable
 fun BookmarksScreen(
     onNavigateBack: () -> Unit,
+    onToggleDarkMode: () -> Unit = {},
     onBookmarkClick: (String, Int, Int, Long) -> Unit, // reciterId, surahNumber, ayahNumber, positionMs
     onReadingBookmarkClick: ((Int) -> Unit)? = null, // pageNumber - navigate to reader
     onNavigateToSettings: () -> Unit = {},
     onNavigateToPrayerTimes: () -> Unit = {},
+    onNavigateToQibla: () -> Unit = {},
     onNavigateToAthkar: () -> Unit = {},
     onNavigateToTracker: () -> Unit = {},
     onNavigateToDownloads: () -> Unit = {},
     onNavigateToAbout: () -> Unit = {},
     onNavigateToReading: () -> Unit = {},
     onNavigateToImsakiya: () -> Unit = {},
+    onNavigateToHadith: () -> Unit = {},
+    onNavigateByRoute: (String) -> Unit = {},
     viewModel: BookmarksViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -57,7 +58,7 @@ fun BookmarksScreen(
     val useIndoArabic = isArabic && state.useIndoArabicNumerals
     var showDeleteAllDialog by remember { mutableStateOf(false) }
     var bookmarkToDelete by remember { mutableStateOf<String?>(null) }
-    var readingBookmarkToDelete by remember { mutableStateOf<String?>(null) }
+    var readingBookmarkToDelete by remember { mutableStateOf<List<String>?>(null) }
     CompositionLocalProvider(LocalLayoutDirection provides language.layoutDirection()) {
         Scaffold(
             topBar = {
@@ -70,36 +71,33 @@ fun BookmarksScreen(
                     },
                     navigationIcon = {
                         IconButton(onClick = onNavigateBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = AppTheme.colors.textOnHeader)
                         }
                     },
                     actions = {
+                        DarkModeToggle(language = language, onToggle = { onToggleDarkMode() })
                         if (state.bookmarks.isNotEmpty()) {
                             IconButton(onClick = { showDeleteAllDialog = true }) {
-                                Icon(Icons.Default.DeleteSweep, contentDescription = "Delete all", tint = Color.White)
+                                Icon(Icons.Default.DeleteSweep, contentDescription = "Delete all", tint = AppTheme.colors.textOnHeader)
                             }
                         }
-
-                        CommonOverflowMenu(
-                            language = language,
-                            onNavigateToSettings = onNavigateToSettings,
-                            onNavigateToReading = onNavigateToReading,
-                            onNavigateToPrayerTimes = onNavigateToPrayerTimes,
-                            onNavigateToImsakiya = onNavigateToImsakiya,
-                            onNavigateToAthkar = onNavigateToAthkar,
-                            onNavigateToTracker = onNavigateToTracker,
-                            onNavigateToDownloads = onNavigateToDownloads,
-                            onNavigateToAbout = onNavigateToAbout
-                        )
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = islamicGreen,
-                        titleContentColor = Color.White,
-                        navigationIconContentColor = Color.White
+                        containerColor = AppTheme.colors.topBarBackground,
+                        titleContentColor = AppTheme.colors.goldAccent,
+                        navigationIconContentColor = AppTheme.colors.goldAccent,
+                        actionIconContentColor = AppTheme.colors.goldAccent
                     )
                 )
             },
-            containerColor = creamBackground
+            bottomBar = {
+                BottomNavBar(
+                    currentRoute = "bookmarks",
+                    language = language,
+                    onNavigate = { route -> onNavigateByRoute(route) }
+                )
+            },
+            containerColor = AppTheme.colors.screenBackground
         ) { paddingValues ->
             Box(
                 modifier = Modifier
@@ -112,7 +110,7 @@ fun BookmarksScreen(
                     state.isLoading -> {
                         CircularProgressIndicator(
                             modifier = Modifier.align(Alignment.Center),
-                            color = islamicGreen
+                            color = AppTheme.colors.islamicGreen
                         )
                     }
                     state.error != null -> {
@@ -168,16 +166,16 @@ fun BookmarksScreen(
                                         fontFamily = if (isArabic) scheherazadeFont else null,
                                         fontSize = 16.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = islamicGreen,
+                                        color = AppTheme.colors.islamicGreen,
                                         modifier = Modifier.padding(bottom = 8.dp)
                                     )
                                 }
-                                items(state.readingBookmarks, key = { "reading_${it.id}" }) { bookmark ->
+                                items(state.readingBookmarks, key = { "reading_page_${it.pageNumber}" }) { bookmark ->
                                     ReadingBookmarkCard(
                                         bookmark = bookmark,
                                         isArabic = isArabic,
                                         onClick = { onReadingBookmarkClick?.invoke(bookmark.pageNumber) },
-                                        onDelete = { readingBookmarkToDelete = bookmark.id },
+                                        onDelete = { readingBookmarkToDelete = bookmark.bookmarkIds },
                                         useIndoArabic = useIndoArabic
                                     )
                                 }
@@ -191,7 +189,7 @@ fun BookmarksScreen(
                                         fontFamily = if (isArabic) scheherazadeFont else null,
                                         fontSize = 16.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = islamicGreen,
+                                        color = AppTheme.colors.islamicGreen,
                                         modifier = Modifier.padding(top = if (state.readingBookmarks.isNotEmpty()) 16.dp else 0.dp, bottom = 8.dp)
                                     )
                                 }
@@ -243,7 +241,7 @@ fun BookmarksScreen(
     }
 
     // Delete reading bookmark confirmation dialog
-    readingBookmarkToDelete?.let { bookmarkId ->
+    readingBookmarkToDelete?.let { bookmarkIds ->
         AlertDialog(
             onDismissRequest = { readingBookmarkToDelete = null },
             title = { Text(if (isArabic) "حذف علامة القراءة" else "Delete Reading Bookmark", fontFamily = if (isArabic) scheherazadeFont else null) },
@@ -251,7 +249,7 @@ fun BookmarksScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        viewModel.deleteReadingBookmark(bookmarkId)
+                        viewModel.deletePageBookmarks(bookmarkIds)
                         readingBookmarkToDelete = null
                     }
                 ) {
@@ -294,7 +292,7 @@ fun BookmarksScreen(
 
 @Composable
 private fun ReadingBookmarkCard(
-    bookmark: ReadingBookmarkEntity,
+    bookmark: PageBookmark,
     isArabic: Boolean,
     onClick: () -> Unit,
     onDelete: () -> Unit,
@@ -310,7 +308,7 @@ private fun ReadingBookmarkCard(
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = AppTheme.colors.cardBackground),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -319,11 +317,10 @@ private fun ReadingBookmarkCard(
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Icon
             Icon(
                 Icons.Default.MenuBook,
                 contentDescription = null,
-                tint = islamicGreen,
+                tint = AppTheme.colors.islamicGreen,
                 modifier = Modifier.size(32.dp)
             )
 
@@ -335,20 +332,28 @@ private fun ReadingBookmarkCard(
                     fontFamily = if (isArabic) scheherazadeFont else null,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
-                    color = Color.Black
+                    color = AppTheme.colors.textPrimary
                 )
                 bookmark.surahName?.let {
                     Text(
                         text = it,
                         fontFamily = scheherazadeFont,
                         fontSize = 14.sp,
-                        color = Color.Gray
+                        color = AppTheme.colors.textSecondary
+                    )
+                }
+                if (bookmark.ayahLabels.isNotEmpty()) {
+                    Text(
+                        text = bookmark.ayahLabels.joinToString("، "),
+                        fontFamily = scheherazadeFont,
+                        fontSize = 13.sp,
+                        color = AppTheme.colors.goldAccent
                     )
                 }
                 Text(
                     text = formattedDate,
                     fontSize = 12.sp,
-                    color = Color.Gray
+                    color = AppTheme.colors.textSecondary
                 )
             }
 
@@ -381,7 +386,7 @@ private fun BookmarkCard(
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = AppTheme.colors.cardBackground),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -394,7 +399,7 @@ private fun BookmarkCard(
             Icon(
                 Icons.Default.Headphones,
                 contentDescription = null,
-                tint = islamicGreen,
+                tint = AppTheme.colors.islamicGreen,
                 modifier = Modifier.size(32.dp)
             )
 
@@ -406,14 +411,14 @@ private fun BookmarkCard(
                     fontFamily = scheherazadeFont,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
-                    color = Color.Black,
+                    color = AppTheme.colors.textPrimary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = bookmarkWithDetails.reciterName,
                     fontSize = 13.sp,
-                    color = Color.Gray,
+                    color = AppTheme.colors.textSecondary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -421,12 +426,12 @@ private fun BookmarkCard(
                     text = if (isArabic) "آية ${ArabicNumeralUtils.formatNumber(bookmarkWithDetails.bookmark.ayahNumber, useIndoArabic)}" else "Ayah ${bookmarkWithDetails.bookmark.ayahNumber}",
                     fontFamily = if (isArabic) scheherazadeFont else null,
                     fontSize = 12.sp,
-                    color = islamicGreen
+                    color = AppTheme.colors.islamicGreen
                 )
                 Text(
                     text = formattedDate,
                     fontSize = 11.sp,
-                    color = Color.Gray
+                    color = AppTheme.colors.textSecondary
                 )
             }
 

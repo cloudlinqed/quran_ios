@@ -30,10 +30,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.quranmedia.player.data.repository.AppLanguage
+import com.quranmedia.player.presentation.theme.AppTheme
 import com.quranmedia.player.presentation.util.layoutDirection
 
-// Colors
-private val PrimaryGreen = Color(0xFF1B5E20)
+// Static colors (not theme-dependent)
 private val LightGreen = Color(0xFFE8F5E9)
 private val WarningOrange = Color(0xFFFF9800)
 private val LightOrange = Color(0xFFFFF3E0)
@@ -88,7 +88,7 @@ fun OnboardingScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
+                .background(AppTheme.colors.screenBackground)
                 .systemBarsPadding()
         ) {
             Column(
@@ -116,7 +116,7 @@ fun OnboardingScreen(
                     text = if (isArabic) "مرحباً بك في الفرقان" else "Welcome to Al-Furqan",
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
-                    color = PrimaryGreen
+                    color = AppTheme.colors.topBarBackground
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -125,7 +125,7 @@ fun OnboardingScreen(
                     text = if (isArabic) "إعداد التطبيق" else "App Setup",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
-                    color = Color.Gray
+                    color = AppTheme.colors.textSecondary
                 )
 
                 Text(
@@ -134,7 +134,7 @@ fun OnboardingScreen(
                     else
                         "Allow permissions and choose your settings",
                     fontSize = 12.sp,
-                    color = Color.Gray,
+                    color = AppTheme.colors.textSecondary,
                     textAlign = TextAlign.Center
                 )
 
@@ -208,7 +208,7 @@ fun OnboardingScreen(
                                         }
                                     },
                                     modifier = Modifier.fillMaxWidth(),
-                                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen),
+                                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.topBarBackground),
                                     shape = RoundedCornerShape(8.dp)
                                 ) {
                                     Icon(
@@ -294,7 +294,7 @@ fun OnboardingScreen(
                             Icon(
                                 Icons.Default.Info,
                                 contentDescription = null,
-                                tint = PrimaryGreen,
+                                tint = AppTheme.colors.darkGreen,
                                 modifier = Modifier.size(20.dp)
                             )
                             Text(
@@ -303,7 +303,7 @@ fun OnboardingScreen(
                                 else
                                     "Athan, max volume, and flip-to-silence will be enabled automatically",
                                 fontSize = 12.sp,
-                                color = PrimaryGreen
+                                color = AppTheme.colors.topBarBackground
                             )
                         }
                     }
@@ -315,14 +315,14 @@ fun OnboardingScreen(
                 Button(
                     onClick = { viewModel.completeOnboarding() },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen),
+                    colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.topBarBackground),
                     enabled = !uiState.isCompleting
                 ) {
                     if (uiState.isCompleting) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(20.dp),
                             strokeWidth = 2.dp,
-                            color = Color.White
+                            color = AppTheme.colors.textOnPrimary
                         )
                     } else {
                         Text(if (isArabic) "ابدأ" else "Start")
@@ -337,7 +337,7 @@ fun OnboardingScreen(
                     else
                         "You can change settings later from the menu",
                     fontSize = 11.sp,
-                    color = Color.Gray
+                    color = AppTheme.colors.textSecondary
                 )
             }
         }
@@ -362,7 +362,7 @@ private fun PermissionStatusRow(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = if (isGranted) PrimaryGreen else Color.Gray,
+            tint = if (isGranted) AppTheme.colors.topBarBackground else AppTheme.colors.iconDefault,
             modifier = Modifier.size(20.dp)
         )
         Text(
@@ -374,14 +374,14 @@ private fun PermissionStatusRow(
             Text(
                 text = extraInfo,
                 fontSize = 12.sp,
-                color = PrimaryGreen,
+                color = AppTheme.colors.topBarBackground,
                 fontWeight = FontWeight.Medium
             )
         }
         Icon(
             imageVector = if (isGranted) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
             contentDescription = null,
-            tint = if (isGranted) PrimaryGreen else Color.LightGray,
+            tint = if (isGranted) AppTheme.colors.topBarBackground else Color.LightGray,
             modifier = Modifier.size(20.dp)
         )
     }
@@ -420,14 +420,14 @@ private fun PrayerMethodSelector(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Text(
                 text = if (isArabic) "طريقة حساب مواقيت الصلاة" else "Prayer Calculation Method",
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = PrimaryGreen
+                color = AppTheme.colors.topBarBackground
             )
 
             Spacer(modifier = Modifier.height(6.dp))
@@ -446,8 +446,8 @@ private fun PrayerMethodSelector(
                     textStyle = LocalTextStyle.current.copy(fontSize = 13.sp),
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = PrimaryGreen,
-                        unfocusedBorderColor = Color.LightGray
+                        focusedBorderColor = AppTheme.colors.topBarBackground,
+                        unfocusedBorderColor = AppTheme.colors.border
                     ),
                     singleLine = true
                 )

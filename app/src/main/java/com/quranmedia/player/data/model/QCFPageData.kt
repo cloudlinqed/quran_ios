@@ -116,6 +116,22 @@ data class QCFWordData(
 }
 
 /**
+ * Extract unique (surah, ayah) pairs from this page's word data, in reading order.
+ */
+fun QCFPageData.extractAyahRefs(): List<Pair<Int, Int>> {
+    val refs = linkedSetOf<Pair<Int, Int>>()
+    for (line in lines) {
+        val words = line.words ?: continue
+        for (word in words) {
+            val surah = word.getSurahNumber() ?: continue
+            val verse = word.getVerseNumber() ?: continue
+            refs.add(surah to verse)
+        }
+    }
+    return refs.toList()
+}
+
+/**
  * Font mode for QCF rendering.
  */
 enum class QCFFontMode {

@@ -73,8 +73,11 @@ class BootCompletedReceiver : BroadcastReceiver() {
                         // Ignore
                     }
                 }
+                // Reschedule athkar notifications
+                AthkarAlarmReceiver.scheduleFromSettings(context, settings)
+                Timber.d("Athkar alarms rescheduled after boot")
             } catch (e: Exception) {
-                Timber.e(e, "Error rescheduling prayer alarms after boot")
+                Timber.e(e, "Error rescheduling alarms after boot")
             } finally {
                 pendingResult.finish()
             }

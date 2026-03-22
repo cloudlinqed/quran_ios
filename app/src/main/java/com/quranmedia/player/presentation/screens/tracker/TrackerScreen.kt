@@ -34,12 +34,9 @@ import com.quranmedia.player.data.repository.AppLanguage
 import com.quranmedia.player.domain.model.ActivityType
 import com.quranmedia.player.domain.model.GoalType
 import com.quranmedia.player.presentation.screens.reader.components.scheherazadeFont
-import com.quranmedia.player.presentation.screens.reader.components.islamicGreen
-import com.quranmedia.player.presentation.screens.reader.components.lightGreen
-import com.quranmedia.player.presentation.screens.reader.components.darkGreen
-import com.quranmedia.player.presentation.screens.reader.components.goldAccent
-import com.quranmedia.player.presentation.screens.reader.components.creamBackground
-import com.quranmedia.player.presentation.components.CommonOverflowMenu
+import com.quranmedia.player.presentation.theme.AppTheme
+import com.quranmedia.player.presentation.components.BottomNavBar
+import com.quranmedia.player.presentation.components.DarkModeToggle
 import com.quranmedia.player.presentation.util.Strings
 import com.quranmedia.player.presentation.util.layoutDirection
 import com.quranmedia.player.domain.util.ArabicNumeralUtils
@@ -49,15 +46,19 @@ import java.time.format.DateTimeFormatter
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TrackerScreen(
+    onToggleDarkMode: () -> Unit = {},
     viewModel: TrackerViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit,
     onNavigateToSettings: () -> Unit = {},
     onNavigateToPrayerTimes: () -> Unit = {},
+    onNavigateToQibla: () -> Unit = {},
     onNavigateToAthkar: () -> Unit = {},
     onNavigateToDownloads: () -> Unit = {},
     onNavigateToAbout: () -> Unit = {},
     onNavigateToReading: () -> Unit = {},
-    onNavigateToImsakiya: () -> Unit = {}
+    onNavigateToImsakiya: () -> Unit = {},
+    onNavigateToHadith: () -> Unit = {},
+    onNavigateByRoute: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val settings by viewModel.settings.collectAsState(initial = com.quranmedia.player.data.repository.UserSettings())
@@ -85,27 +86,24 @@ fun TrackerScreen(
                         }
                     },
                     actions = {
-                        CommonOverflowMenu(
-                            language = language,
-                            onNavigateToSettings = onNavigateToSettings,
-                            onNavigateToReading = onNavigateToReading,
-                            onNavigateToPrayerTimes = onNavigateToPrayerTimes,
-                            onNavigateToImsakiya = onNavigateToImsakiya,
-                            onNavigateToAthkar = onNavigateToAthkar,
-                            onNavigateToDownloads = onNavigateToDownloads,
-                            onNavigateToAbout = onNavigateToAbout,
-                            hideTracker = true  // Hide Tracker since we're on this screen
-                        )
+                        DarkModeToggle(language = language, onToggle = { onToggleDarkMode() })
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = islamicGreen,
-                        titleContentColor = Color.White,
-                        navigationIconContentColor = Color.White,
-                        actionIconContentColor = Color.White
+                        containerColor = AppTheme.colors.topBarBackground,
+                        titleContentColor = AppTheme.colors.goldAccent,
+                        navigationIconContentColor = AppTheme.colors.goldAccent,
+                        actionIconContentColor = AppTheme.colors.goldAccent
                     )
                 )
             },
-            containerColor = creamBackground
+            bottomBar = {
+                BottomNavBar(
+                    currentRoute = "tracker",
+                    language = language,
+                    onNavigate = { route -> onNavigateByRoute(route) }
+                )
+            },
+            containerColor = AppTheme.colors.screenBackground
         ) { paddingValues ->
             val useIndoArabic = language == AppLanguage.ARABIC && settings.useIndoArabicNumerals
             LazyColumn(
@@ -164,7 +162,7 @@ fun TrackerScreen(
                         fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = darkGreen,
+                        color = AppTheme.colors.darkGreen,
                         modifier = Modifier.padding(top = 8.dp)
                     )
                 }
@@ -186,7 +184,7 @@ fun TrackerScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(48.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = islamicGreen),
+                        colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.islamicGreen),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Icon(Icons.Default.Add, contentDescription = null)
@@ -233,7 +231,7 @@ private fun HijriDateCard(
             .fillMaxWidth()
             .shadow(4.dp, RoundedCornerShape(12.dp)),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = AppTheme.colors.cardBackground)
     ) {
         Row(
             modifier = Modifier
@@ -241,8 +239,8 @@ private fun HijriDateCard(
                 .background(
                     Brush.horizontalGradient(
                         colors = listOf(
-                            islamicGreen.copy(alpha = 0.1f),
-                            islamicGreen.copy(alpha = 0.05f)
+                            AppTheme.colors.islamicGreen.copy(alpha = 0.1f),
+                            AppTheme.colors.islamicGreen.copy(alpha = 0.05f)
                         )
                     )
                 )
@@ -252,7 +250,7 @@ private fun HijriDateCard(
             Icon(
                 Icons.Default.CalendarMonth,
                 contentDescription = null,
-                tint = islamicGreen,
+                tint = AppTheme.colors.islamicGreen,
                 modifier = Modifier.size(32.dp)
             )
             Spacer(modifier = Modifier.width(12.dp))
@@ -260,7 +258,7 @@ private fun HijriDateCard(
                 Text(
                     text = if (language == AppLanguage.ARABIC) "التاريخ الهجري" else "Hijri Date",
                     fontSize = 12.sp,
-                    color = Color.Gray
+                    color = AppTheme.colors.textSecondary
                 )
                 Text(
                     text = hijriDate?.let {
@@ -271,7 +269,7 @@ private fun HijriDateCard(
                     fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = darkGreen
+                    color = AppTheme.colors.darkGreen
                 )
             }
         }
@@ -289,7 +287,7 @@ private fun DailyActivitiesCard(
             .fillMaxWidth()
             .shadow(4.dp, RoundedCornerShape(12.dp)),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = AppTheme.colors.cardBackground)
     ) {
         Column(
             modifier = Modifier
@@ -302,7 +300,7 @@ private fun DailyActivitiesCard(
                 Icon(
                     Icons.Default.WbSunny,
                     contentDescription = null,
-                    tint = islamicGreen,
+                    tint = AppTheme.colors.islamicGreen,
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
@@ -311,7 +309,7 @@ private fun DailyActivitiesCard(
                     fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = darkGreen
+                    color = AppTheme.colors.darkGreen
                 )
             }
 
@@ -350,7 +348,7 @@ private fun AthkarCheckboxRow(
 
     // Background color animation
     val backgroundColor by animateColorAsState(
-        targetValue = if (isPressed) islamicGreen.copy(alpha = 0.15f) else Color.Transparent,
+        targetValue = if (isPressed) AppTheme.colors.islamicGreen.copy(alpha = 0.15f) else Color.Transparent,
         animationSpec = tween(durationMillis = 100),
         label = "backgroundColor"
     )
@@ -374,7 +372,7 @@ private fun AthkarCheckboxRow(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = androidx.compose.material.ripple.rememberRipple(
                     bounded = true,
-                    color = islamicGreen,
+                    color = AppTheme.colors.islamicGreen,
                     radius = 300.dp  // Larger ripple
                 )
             ) {
@@ -400,8 +398,8 @@ private fun AthkarCheckboxRow(
             checked = activity.completed,
             onCheckedChange = null, // Handle click on the row instead
             colors = CheckboxDefaults.colors(
-                checkedColor = islamicGreen,
-                uncheckedColor = Color.Gray
+                checkedColor = AppTheme.colors.islamicGreen,
+                uncheckedColor = AppTheme.colors.iconDefault
             )
         )
         Spacer(modifier = Modifier.width(8.dp))
@@ -412,7 +410,7 @@ private fun AthkarCheckboxRow(
                 activity.activityType.nameEnglish,
             fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
             fontSize = 16.sp,
-            color = if (activity.completed) Color.Gray else Color.DarkGray
+            color = if (activity.completed) AppTheme.colors.textSecondary else AppTheme.colors.textPrimary
         )
 
         // Animated check icon when completed
@@ -431,7 +429,7 @@ private fun AthkarCheckboxRow(
             Icon(
                 Icons.Default.CheckCircle,
                 contentDescription = null,
-                tint = islamicGreen,
+                tint = AppTheme.colors.islamicGreen,
                 modifier = Modifier
                     .size(20.dp)
                     .scale(checkScale)
@@ -453,7 +451,7 @@ private fun QuranProgressCard(
             .fillMaxWidth()
             .shadow(4.dp, RoundedCornerShape(12.dp)),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = AppTheme.colors.cardBackground)
     ) {
         Column(
             modifier = Modifier
@@ -466,7 +464,7 @@ private fun QuranProgressCard(
                 Icon(
                     Icons.Default.MenuBook,
                     contentDescription = null,
-                    tint = islamicGreen,
+                    tint = AppTheme.colors.islamicGreen,
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
@@ -475,7 +473,7 @@ private fun QuranProgressCard(
                     fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = darkGreen
+                    color = AppTheme.colors.darkGreen
                 )
             }
 
@@ -493,18 +491,18 @@ private fun QuranProgressCard(
                     Text(
                         text = if (language == AppLanguage.ARABIC) "المقروءة" else "Read",
                         fontSize = 12.sp,
-                        color = Color.Gray
+                        color = AppTheme.colors.textSecondary
                     )
                     Text(
                         text = ArabicNumeralUtils.formatNumber(progress?.pagesRead ?: 0, useIndoArabic),
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Bold,
-                        color = islamicGreen
+                        color = AppTheme.colors.islamicGreen
                     )
                     Text(
                         text = if (language == AppLanguage.ARABIC) "صفحة" else "pages",
                         fontSize = 12.sp,
-                        color = Color.Gray
+                        color = AppTheme.colors.textSecondary
                     )
                 }
 
@@ -512,7 +510,7 @@ private fun QuranProgressCard(
                     modifier = Modifier
                         .width(1.dp)
                         .height(80.dp),
-                    color = Color.Gray.copy(alpha = 0.3f)
+                    color = AppTheme.colors.divider
                 )
 
                 // Pages Listened (with manual adjustment)
@@ -523,7 +521,7 @@ private fun QuranProgressCard(
                     Text(
                         text = if (language == AppLanguage.ARABIC) "المسموعة" else "Listened",
                         fontSize = 12.sp,
-                        color = Color.Gray
+                        color = AppTheme.colors.textSecondary
                     )
 
                     Row(
@@ -537,7 +535,7 @@ private fun QuranProgressCard(
                             Icon(
                                 Icons.Default.Remove,
                                 contentDescription = "Decrease",
-                                tint = islamicGreen
+                                tint = AppTheme.colors.islamicGreen
                             )
                         }
 
@@ -545,7 +543,7 @@ private fun QuranProgressCard(
                             text = ArabicNumeralUtils.formatNumber(progress?.pagesListened ?: 0, useIndoArabic),
                             fontSize = 32.sp,
                             fontWeight = FontWeight.Bold,
-                            color = islamicGreen,
+                            color = AppTheme.colors.islamicGreen,
                             modifier = Modifier.padding(horizontal = 8.dp)
                         )
 
@@ -556,7 +554,7 @@ private fun QuranProgressCard(
                             Icon(
                                 Icons.Default.Add,
                                 contentDescription = "Increase",
-                                tint = islamicGreen
+                                tint = AppTheme.colors.islamicGreen
                             )
                         }
                     }
@@ -564,7 +562,7 @@ private fun QuranProgressCard(
                     Text(
                         text = if (language == AppLanguage.ARABIC) "صفحة" else "pages",
                         fontSize = 12.sp,
-                        color = Color.Gray
+                        color = AppTheme.colors.textSecondary
                     )
                 }
             }
@@ -584,7 +582,7 @@ private fun ActiveKhatmahGoalCard(
             .fillMaxWidth()
             .shadow(4.dp, RoundedCornerShape(12.dp)),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = AppTheme.colors.cardBackground)
     ) {
         Column(
             modifier = Modifier
@@ -597,7 +595,7 @@ private fun ActiveKhatmahGoalCard(
                 Icon(
                     Icons.Default.Flag,
                     contentDescription = null,
-                    tint = islamicGreen,
+                    tint = AppTheme.colors.islamicGreen,
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
@@ -606,7 +604,7 @@ private fun ActiveKhatmahGoalCard(
                     fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = darkGreen
+                    color = AppTheme.colors.darkGreen
                 )
             }
 
@@ -619,7 +617,7 @@ private fun ActiveKhatmahGoalCard(
                     fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = darkGreen
+                    color = AppTheme.colors.darkGreen
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -632,8 +630,8 @@ private fun ActiveKhatmahGoalCard(
                             .fillMaxWidth()
                             .height(8.dp)
                             .clip(RoundedCornerShape(4.dp)),
-                        color = if (goalProgress.isOnTrack) islamicGreen else Color(0xFFFF6B6B),
-                        trackColor = Color.Gray.copy(alpha = 0.2f)
+                        color = if (goalProgress.isOnTrack) AppTheme.colors.islamicGreen else Color(0xFFFF6B6B),
+                        trackColor = AppTheme.colors.divider
                     )
 
                     Spacer(modifier = Modifier.height(4.dp))
@@ -641,7 +639,7 @@ private fun ActiveKhatmahGoalCard(
                     Text(
                         text = "${ArabicNumeralUtils.formatNumber(goalProgress.progressPercentage.toInt(), useIndoArabic)}% ${if (language == AppLanguage.ARABIC) "مكتمل" else "complete"}",
                         fontSize = 12.sp,
-                        color = Color.Gray
+                        color = AppTheme.colors.textSecondary
                     )
                 }
 
@@ -678,7 +676,7 @@ private fun ActiveKhatmahGoalCard(
                     Icon(
                         if (goalProgress.isOnTrack) Icons.Default.CheckCircle else Icons.Default.Warning,
                         contentDescription = null,
-                        tint = if (goalProgress.isOnTrack) islamicGreen else Color(0xFFFF8A65),
+                        tint = if (goalProgress.isOnTrack) AppTheme.colors.islamicGreen else Color(0xFFFF8A65),
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -690,7 +688,7 @@ private fun ActiveKhatmahGoalCard(
                         },
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
-                        color = if (goalProgress.isOnTrack) islamicGreen else Color(0xFFFF8A65)
+                        color = if (goalProgress.isOnTrack) AppTheme.colors.islamicGreen else Color(0xFFFF8A65)
                     )
                 }
             } else {
@@ -704,14 +702,14 @@ private fun ActiveKhatmahGoalCard(
                     Icon(
                         Icons.Default.AddCircle,
                         contentDescription = null,
-                        tint = Color.Gray,
+                        tint = AppTheme.colors.iconDefault,
                         modifier = Modifier.size(48.dp)
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = if (language == AppLanguage.ARABIC) "لا يوجد هدف نشط" else "No active goal",
                         fontSize = 16.sp,
-                        color = Color.Gray
+                        color = AppTheme.colors.textSecondary
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     TextButton(onClick = onCreateGoal) {
@@ -740,12 +738,12 @@ private fun StatItem(
             text = value,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
-            color = islamicGreen
+            color = AppTheme.colors.islamicGreen
         )
         Text(
             text = label,
             fontSize = 12.sp,
-            color = Color.Gray
+            color = AppTheme.colors.textSecondary
         )
     }
 }
@@ -766,7 +764,7 @@ private fun GoalListItem(
             .shadow(2.dp, RoundedCornerShape(8.dp)),
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isActive) islamicGreen.copy(alpha = 0.1f) else Color.White
+            containerColor = if (isActive) AppTheme.colors.islamicGreen.copy(alpha = 0.1f) else AppTheme.colors.cardBackground
         )
     ) {
         Row(
@@ -782,7 +780,7 @@ private fun GoalListItem(
                         Icon(
                             Icons.Default.CheckCircle,
                             contentDescription = null,
-                            tint = islamicGreen,
+                            tint = AppTheme.colors.islamicGreen,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
@@ -792,14 +790,14 @@ private fun GoalListItem(
                         fontFamily = if (language == AppLanguage.ARABIC) scheherazadeFont else null,
                         fontSize = 16.sp,
                         fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
-                        color = if (isActive) islamicGreen else Color.DarkGray
+                        color = if (isActive) AppTheme.colors.islamicGreen else AppTheme.colors.textPrimary
                     )
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "${goal.startDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))} → ${goal.endDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))}",
                     fontSize = 12.sp,
-                    color = Color.Gray
+                    color = AppTheme.colors.textSecondary
                 )
             }
 

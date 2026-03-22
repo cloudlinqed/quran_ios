@@ -2,14 +2,14 @@ package com.quranmedia.player.presentation.components
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
 import com.quranmedia.player.data.repository.AppLanguage
 import com.quranmedia.player.presentation.screens.reader.components.scheherazadeFont
-import com.quranmedia.player.presentation.screens.reader.components.islamicGreen
-import com.quranmedia.player.presentation.screens.reader.components.darkGreen
+import com.quranmedia.player.presentation.theme.AppTheme
 
 /**
  * Centralized three-dot overflow menu used across all screens.
@@ -35,8 +35,10 @@ fun CommonOverflowMenu(
     onNavigateToSettings: () -> Unit = {},
     onNavigateToReading: () -> Unit = {},
     onNavigateToPrayerTimes: () -> Unit = {},
+    onNavigateToQibla: () -> Unit = {},
     onNavigateToImsakiya: () -> Unit = {},
     onNavigateToAthkar: () -> Unit = {},
+    onNavigateToHadith: () -> Unit = {},
     onNavigateToTracker: () -> Unit = {},
     onNavigateToDownloads: () -> Unit = {},
     onNavigateToAbout: () -> Unit = {},
@@ -44,23 +46,26 @@ fun CommonOverflowMenu(
     hideSettings: Boolean = false,
     hideReading: Boolean = false,
     hidePrayerTimes: Boolean = false,
-    hideImsakiya: Boolean = false,
+    hideQibla: Boolean = false,
+    hideImsakiya: Boolean = true, // Hidden until next Ramadan
     hideAthkar: Boolean = false,
+    hideHadith: Boolean = false,
     hideTracker: Boolean = false,
     hideDownloads: Boolean = false,
     hideAbout: Boolean = false,
     // Icon tint color (some screens use different colors)
-    iconTint: Color = Color.White
+    iconTint: Color = Color.Unspecified
 ) {
     var showMenu by remember { mutableStateOf(false) }
     val isArabic = language == AppLanguage.ARABIC
+    val resolvedIconTint = if (iconTint == Color.Unspecified) AppTheme.colors.textOnHeader else iconTint
 
     Box {
         IconButton(onClick = { showMenu = true }) {
             Icon(
                 Icons.Default.MoreVert,
                 contentDescription = "Menu",
-                tint = iconTint
+                tint = resolvedIconTint
             )
         }
         DropdownMenu(
@@ -106,6 +111,19 @@ fun CommonOverflowMenu(
                 )
             }
 
+            // Qibla Direction
+            if (!hideQibla) {
+                OverflowMenuItem(
+                    text = if (isArabic) "اتجاه القبلة" else "Qibla Direction",
+                    icon = Icons.Default.Explore,
+                    isArabic = isArabic,
+                    onClick = {
+                        showMenu = false
+                        onNavigateToQibla()
+                    }
+                )
+            }
+
             // Ramadan Imsakiya (TODO: Remove after Ramadan)
             if (!hideImsakiya) {
                 OverflowMenuItem(
@@ -128,6 +146,19 @@ fun CommonOverflowMenu(
                     onClick = {
                         showMenu = false
                         onNavigateToAthkar()
+                    }
+                )
+            }
+
+            // Hadith Library
+            if (!hideHadith) {
+                OverflowMenuItem(
+                    text = if (isArabic) "الأحاديث" else "Hadith Library",
+                    icon = Icons.AutoMirrored.Filled.MenuBook,
+                    isArabic = isArabic,
+                    onClick = {
+                        showMenu = false
+                        onNavigateToHadith()
                     }
                 )
             }
@@ -186,12 +217,12 @@ private fun OverflowMenuItem(
             Text(
                 text = text,
                 fontFamily = if (isArabic) scheherazadeFont else null,
-                color = darkGreen
+                color = AppTheme.colors.darkGreen
             )
         },
         onClick = onClick,
         leadingIcon = {
-            Icon(icon, contentDescription = null, tint = islamicGreen)
+            Icon(icon, contentDescription = null, tint = AppTheme.colors.islamicGreen)
         }
     )
 }

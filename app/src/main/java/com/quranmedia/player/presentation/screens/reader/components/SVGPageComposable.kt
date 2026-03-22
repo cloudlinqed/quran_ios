@@ -90,6 +90,7 @@ fun SVGPageComposable(
     pageData: QCFPageData? = null,
     ayahs: List<Ayah> = emptyList(),
     highlightedAyah: HighlightedAyah? = null,
+    bookmarkedAyahHighlights: Set<HighlightedAyah> = emptySet(),
     readingTheme: ReadingTheme = ReadingTheme.LIGHT,
     customBackgroundColor: Color? = null,
     customTextColor: Color? = null,
@@ -195,6 +196,7 @@ fun SVGPageComposable(
                                     pageData = pageData,
                                     ayahs = ayahs,
                                     highlightedAyah = highlightedAyah,
+                                    bookmarkedAyahHighlights = bookmarkedAyahHighlights,
                                     highlightColor = themeColors.highlight,
                                     onTap = onTap,
                                     onAyahLongPress = onAyahLongPress,
@@ -215,6 +217,7 @@ fun SVGPageComposable(
                                 pageData = pageData,
                                 ayahs = ayahs,
                                 highlightedAyah = highlightedAyah,
+                                bookmarkedAyahHighlights = bookmarkedAyahHighlights,
                                 highlightColor = themeColors.highlight,
                                 onTap = onTap,
                                 onAyahLongPress = onAyahLongPress,
@@ -459,6 +462,7 @@ private fun SvgAyahOverlay(
     pageData: QCFPageData?,
     ayahs: List<Ayah>,
     highlightedAyah: HighlightedAyah?,
+    bookmarkedAyahHighlights: Set<HighlightedAyah> = emptySet(),
     highlightColor: Color,
     onTap: (() -> Unit)?,
     onAyahLongPress: ((Ayah, Offset) -> Unit)?,
@@ -518,46 +522,51 @@ private fun SvgAyahOverlay(
                 )
             }
     ) {
-        if (highlightedAyah != null && pageData != null) {
+        // Combine playback highlight + bookmarked ayahs into one set to draw
+        val allHighlights = buildSet {
+            if (highlightedAyah != null) add(highlightedAyah)
+            addAll(bookmarkedAyahHighlights)
+        }
+
+        if (allHighlights.isNotEmpty() && pageData != null) {
             val contentLeftBm = page.contentLeft * page.scale + page.offsetX
             val contentRightBm = (page.contentRight + 1) * page.scale + page.offsetX
             val bitmapContentW = contentRightBm - contentLeftBm
             val cornerR = CornerRadius(4.dp.toPx())
 
-            pageData.lines.forEach { line ->
-                if (line.type != QCFLineType.TEXT) return@forEach
-                val words = line.words ?: return@forEach
-                val lineNum = line.line ?: return@forEach
+            allHighlights.forEach { highlighted ->
+                pageData.lines.forEach { line ->
+                    if (line.type != QCFLineType.TEXT) return@forEach
+                    val words = line.words ?: return@forEach
+                    val lineNum = line.line ?: return@forEach
 
-                // Find highlighted word range within this line
-                val firstIdx = words.indexOfFirst { word ->
-                    word.getSurahNumber() == highlightedAyah.surahNumber &&
-                        word.getVerseNumber() == highlightedAyah.ayahNumber
+                    val firstIdx = words.indexOfFirst { word ->
+                        word.getSurahNumber() == highlighted.surahNumber &&
+                            word.getVerseNumber() == highlighted.ayahNumber
+                    }
+                    if (firstIdx < 0) return@forEach
+
+                    val lastIdx = words.indexOfLast { word ->
+                        word.getSurahNumber() == highlighted.surahNumber &&
+                            word.getVerseNumber() == highlighted.ayahNumber
+                    }
+
+                    val lineTopPic = contentTopPic + (lineNum - 1) * lineSlotH
+                    val lineBottomPic = contentTopPic + lineNum * lineSlotH
+                    val lineTopBm = lineTopPic * page.scale + page.offsetY
+                    val lineBottomBm = lineBottomPic * page.scale + page.offsetY
+
+                    val totalWords = words.size.toFloat()
+                    val highlightLeft = contentRightBm - ((lastIdx + 1) / totalWords) * bitmapContentW
+                    val highlightRight = contentRightBm - (firstIdx / totalWords) * bitmapContentW
+
+                    drawRoundRect(
+                        color = highlightColor.copy(alpha = 0.3f),
+                        topLeft = Offset(highlightLeft, lineTopBm),
+                        size = Size(highlightRight - highlightLeft, lineBottomBm - lineTopBm),
+                        cornerRadius = cornerR
+                    )
                 }
-                if (firstIdx < 0) return@forEach
-
-                val lastIdx = words.indexOfLast { word ->
-                    word.getSurahNumber() == highlightedAyah.surahNumber &&
-                        word.getVerseNumber() == highlightedAyah.ayahNumber
-                }
-
-                // Line vertical position using detected content bounds
-                val lineTopPic = contentTopPic + (lineNum - 1) * lineSlotH
-                val lineBottomPic = contentTopPic + lineNum * lineSlotH
-                val lineTopBm = lineTopPic * page.scale + page.offsetY
-                val lineBottomBm = lineBottomPic * page.scale + page.offsetY
-
-                // Ayah horizontal span (RTL: word 0 at right, word N-1 at left)
-                val totalWords = words.size.toFloat()
-                val highlightLeft = contentRightBm - ((lastIdx + 1) / totalWords) * bitmapContentW
-                val highlightRight = contentRightBm - (firstIdx / totalWords) * bitmapContentW
-
-                drawRoundRect(
-                    color = highlightColor.copy(alpha = 0.3f),
-                    topLeft = Offset(highlightLeft, lineTopBm),
-                    size = Size(highlightRight - highlightLeft, lineBottomBm - lineTopBm),
-                    cornerRadius = cornerR
-                )
             }
         }
     }

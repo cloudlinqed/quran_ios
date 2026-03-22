@@ -26,9 +26,17 @@ data class BookmarkWithDetails(
     val reciterName: String
 )
 
+data class PageBookmark(
+    val pageNumber: Int,
+    val surahName: String?,
+    val ayahLabels: List<String>,
+    val bookmarkIds: List<String>,
+    val createdAt: Long
+)
+
 data class BookmarksState(
     val playbackBookmarks: List<BookmarkWithDetails> = emptyList(),
-    val readingBookmarks: List<ReadingBookmarkEntity> = emptyList(),
+    val readingBookmarks: List<PageBookmark> = emptyList(),
     val isLoading: Boolean = true,
     val error: String? = null,
     val appLanguage: AppLanguage = AppLanguage.ARABIC,
@@ -70,7 +78,18 @@ class BookmarksViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 readingBookmarkDao.getAllReadingBookmarks().collect { bookmarks ->
-                    _state.value = _state.value.copy(readingBookmarks = bookmarks)
+                    val grouped = bookmarks.groupBy { it.pageNumber }.map { (page, entries) ->
+                        PageBookmark(
+                            pageNumber = page,
+                            surahName = entries.firstNotNullOfOrNull { it.surahName },
+                            ayahLabels = entries.mapNotNull { e ->
+                                e.ayahNumber?.let { "آية $it" }
+                            },
+                            bookmarkIds = entries.map { it.id },
+                            createdAt = entries.maxOf { it.createdAt }
+                        )
+                    }.sortedByDescending { it.createdAt }
+                    _state.value = _state.value.copy(readingBookmarks = grouped)
                 }
             } catch (e: Exception) {
                 Timber.e(e, "Error loading reading bookmarks")
@@ -146,6 +165,17 @@ class BookmarksViewModel @Inject constructor(
                 Timber.d("Deleted reading bookmark: $bookmarkId")
             } catch (e: Exception) {
                 Timber.e(e, "Error deleting reading bookmark")
+            }
+        }
+    }
+
+    fun deletePageBookmarks(bookmarkIds: List<String>) {
+        viewModelScope.launch {
+            try {
+                bookmarkIds.forEach { readingBookmarkDao.deleteBookmark(it) }
+                Timber.d("Deleted ${bookmarkIds.size} reading bookmarks for page")
+            } catch (e: Exception) {
+                Timber.e(e, "Error deleting page bookmarks")
             }
         }
     }

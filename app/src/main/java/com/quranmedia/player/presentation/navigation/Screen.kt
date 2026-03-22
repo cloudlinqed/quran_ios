@@ -39,6 +39,9 @@ sealed class Screen(val route: String) {
     // Prayer Times screen
     object PrayerTimes : Screen("prayerTimes")
 
+    // Qibla Direction screen
+    object Qibla : Screen("qibla")
+
     // Athan Settings screen
     object AthanSettings : Screen("athanSettings")
 
@@ -47,6 +50,20 @@ sealed class Screen(val route: String) {
 
     // Ramadan Imsakiya screen (TODO: Remove after Ramadan)
     object Imsakiya : Screen("imsakiya")
+
+    // Hadith Library screens
+    object HadithLibrary : Screen("hadithLibrary")
+    object HadithBook : Screen("hadithBook/{bookId}") {
+        fun createRoute(bookId: String) = "hadithBook/$bookId"
+    }
+    object HadithReader : Screen("hadithReader/{bookId}/{chapterId}/{hadithIndex}") {
+        fun createRoute(bookId: String, chapterId: Int, hadithIndex: Int = 0) =
+            "hadithReader/$bookId/$chapterId/$hadithIndex"
+    }
+    object HadithSearch : Screen("hadithSearch?bookId={bookId}") {
+        fun createRoute(bookId: String? = null) =
+            if (bookId != null) "hadithSearch?bookId=$bookId" else "hadithSearch"
+    }
 
     // Recite (تسميع) screens - Full Mushaf experience for memorization review
     object Recite : Screen("recite")  // Legacy - redirects to ReciteIndex

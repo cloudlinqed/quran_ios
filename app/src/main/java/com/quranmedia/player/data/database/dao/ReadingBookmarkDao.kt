@@ -28,6 +28,15 @@ interface ReadingBookmarkDao {
     @Query("DELETE FROM reading_bookmarks WHERE pageNumber = :pageNumber")
     suspend fun deleteBookmarkForPage(pageNumber: Int)
 
+    @Query("SELECT * FROM reading_bookmarks WHERE surahNumber = :surahNumber AND ayahNumber = :ayahNumber LIMIT 1")
+    suspend fun getBookmarkForAyah(surahNumber: Int, ayahNumber: Int): ReadingBookmarkEntity?
+
+    @Query("DELETE FROM reading_bookmarks WHERE surahNumber = :surahNumber AND ayahNumber = :ayahNumber")
+    suspend fun deleteBookmarkForAyah(surahNumber: Int, ayahNumber: Int)
+
+    @Query("SELECT * FROM reading_bookmarks WHERE pageNumber = :pageNumber AND ayahNumber IS NOT NULL")
+    suspend fun getAyahBookmarksForPage(pageNumber: Int): List<ReadingBookmarkEntity>
+
     @Query("DELETE FROM reading_bookmarks")
     suspend fun deleteAllBookmarks()
 

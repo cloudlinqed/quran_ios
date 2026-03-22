@@ -129,6 +129,16 @@
             </intent-filter>
         </receiver>
 
+        <!-- Athkar Alarm Receiver for daily morning/evening athkar notifications -->
+        <receiver
+            android:name=".data.notification.AthkarAlarmReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.quranmedia.player.ATHKAR_ALARM" />
+            </intent-filter>
+        </receiver>
+
         <!-- Boot Completed Receiver to reschedule alarms after device restart -->
         <receiver
             android:name=".data.notification.BootCompletedReceiver"

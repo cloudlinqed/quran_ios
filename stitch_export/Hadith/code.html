@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ar"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>المكتبة الحديثية</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style data-purpose="custom-fonts">
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #fdfaf4; /* Soft cream background */
+    }
+  </style>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'brand-green': '#275239',
+            'brand-gold': '#CDAD70',
+            'bg-cream': '#F9F6F0',
+            'book-blue': '#233B65',
+            'book-brown': '#6D4321',
+            'book-green': '#265338',
+            'book-teal': '#287A76',
+            'badge-bg': '#E6CE93',
+            'nav-active': '#D3A95C',
+            'nav-inactive': '#999999'
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-bg-cream text-gray-800 pb-20">
+<!-- BEGIN: Main Header -->
+<header class="bg-brand-green text-brand-gold p-4 sticky top-0 z-10 shadow-md flex items-center justify-between" data-purpose="top-navigation">
+<div class="flex items-center space-x-4 space-x-reverse">
+<!-- Search Icon -->
+<button aria-label="Search" class="focus:outline-none">
+<svg class="h-6 w-6" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+<!-- Menu Icon -->
+<button aria-label="Menu" class="focus:outline-none">
+<svg class="h-6 w-6" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M4 6h16M4 12h16M4 18h7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+</div>
+<!-- Title -->
+<h1 class="text-xl font-bold tracking-wide">المكتبة الحديثية</h1>
+<!-- Back/Forward Icon (Chevron Right for RTL) -->
+<button aria-label="Back" class="focus:outline-none">
+<svg class="h-6 w-6" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+</header>
+<!-- END: Main Header -->
+<!-- BEGIN: Main Content -->
+<main class="p-4" data-purpose="main-content">
+<!-- BEGIN: My Library Section -->
+<section class="mb-8" data-purpose="my-library">
+<h2 class="text-2xl font-bold text-brand-gold mb-4 pr-2">مكتبتي</h2>
+<div class="grid grid-cols-3 gap-3"><div class="relative rounded-md overflow-hidden aspect-[3/4]">
+<div class="w-full h-full rounded-md bg-book-blue p-1.5 shadow-sm">
+<div class="w-full h-full border border-brand-gold rounded flex flex-col items-center justify-between p-2 relative">
+<div class="text-brand-gold font-bold text-center mt-2 leading-snug text-lg">رياض<br/>الصالحين</div>
+<div class="text-brand-gold text-[8px] border border-brand-gold rounded-sm px-1 py-0.5 mb-2">الإمام النووي</div>
+<div class="absolute -bottom-1 -right-1 bg-badge-bg text-black text-xs font-bold px-1.5 py-0.5 rounded">1896</div>
+</div>
+</div>
+</div>
+<div class="relative rounded-md overflow-hidden aspect-[3/4]">
+<div class="w-full h-full rounded-md bg-book-brown p-1.5 shadow-sm">
+<div class="w-full h-full border border-brand-gold rounded flex flex-col items-center justify-between p-2 relative">
+<div class="text-brand-gold font-bold text-center mt-2 leading-snug text-lg">الأربعون<br/>النووية</div>
+<div class="text-brand-gold text-[8px] border border-brand-gold rounded-sm px-1 py-0.5 mb-2">الإمام النووي</div>
+<div class="absolute -bottom-1 -right-1 bg-badge-bg text-black text-xs font-bold px-1.5 py-0.5 rounded">42</div>
+</div>
+</div>
+</div>
+<div class="relative rounded-md overflow-hidden aspect-[3/4]">
+<div class="w-full h-full rounded-md bg-book-green p-1.5 shadow-sm">
+<div class="w-full h-full border border-brand-gold rounded flex flex-col items-center justify-between p-2 relative">
+<div class="text-brand-gold font-bold text-center mt-2 leading-snug text-lg">رياض<br/>الصالحين</div>
+<div class="text-brand-gold text-[8px] border border-brand-gold rounded-sm px-1 py-0.5 mb-2">الإمام النووي</div>
+<div class="absolute -bottom-1 -right-1 bg-badge-bg text-black text-xs font-bold px-1.5 py-0.5 rounded">S3S</div>
+</div>
+</div>
+</div>
+<div class="relative rounded-md overflow-hidden aspect-[3/4]">
+<div class="w-full h-full rounded-md bg-book-teal p-1.5 shadow-sm">
+<div class="w-full h-full border border-brand-gold rounded flex flex-col items-center justify-between p-2 relative">
+<div class="text-brand-gold font-bold text-center mt-2 leading-snug text-lg">الأربعون<br/>النووية</div>
+<div class="text-brand-gold text-[8px] border border-brand-gold rounded-sm px-1 py-0.5 mb-2">الإمام النووي</div>
+<div class="absolute -bottom-1 -right-1 bg-badge-bg text-black text-xs font-bold px-1.5 py-0.5 rounded">57</div>
+</div>
+</div>
+</div>
+<div class="relative rounded-md overflow-hidden aspect-[3/4]">
+<div class="w-full h-full rounded-md bg-book-green p-1.5 shadow-sm">
+<div class="w-full h-full border border-brand-gold rounded flex flex-col items-center justify-between p-2 relative">
+<div class="text-brand-gold font-bold text-center mt-2 leading-snug text-lg">رياض<br/>الصالحين</div>
+<div class="text-brand-gold text-[8px] border border-brand-gold rounded-sm px-1 py-0.5 mb-2">الإمام النووي</div>
+<div class="absolute -bottom-1 -right-1 bg-badge-bg text-black text-xs font-bold px-1.5 py-0.5 rounded">44</div>
+</div>
+</div>
+</div>
+<div class="relative rounded-md overflow-hidden aspect-[3/4]">
+<div class="w-full h-full rounded-md bg-book-blue p-1.5 shadow-sm">
+<div class="w-full h-full border border-brand-gold rounded flex flex-col items-center justify-between p-2 relative">
+<div class="text-brand-gold font-bold text-center mt-2 leading-snug text-lg">الأربعون<br/>النووية</div>
+<div class="text-brand-gold text-[8px] border border-brand-gold rounded-sm px-1 py-0.5 mb-2">الإمام النووي</div>
+<div class="absolute -bottom-1 -right-1 bg-badge-bg text-black text-xs font-bold px-1.5 py-0.5 rounded">59</div>
+</div>
+</div>
+</div></div>
+</section>
+<!-- END: My Library Section -->
+<!-- BEGIN: Available for Download Section -->
+<section data-purpose="available-downloads">
+<h2 class="text-2xl font-bold text-brand-gold mb-4 pr-2">متاح للتحميل</h2>
+<div class="grid grid-cols-3 gap-3"><div class="relative rounded-md overflow-hidden aspect-[3/4]">
+<div class="w-full h-full rounded-md bg-book-blue p-1.5 shadow-sm">
+<div class="w-full h-full border border-brand-gold rounded flex flex-col items-center justify-between p-2 relative">
+<div class="text-brand-gold font-bold text-center mt-2 leading-snug text-lg">رياض<br/>الصالحين</div>
+<div class="text-brand-gold text-[8px] border border-brand-gold rounded-sm px-1 py-0.5 mb-2">الإمام النووي</div>
+<div class="absolute -bottom-1 -right-1 bg-badge-bg text-black text-xs font-bold px-1.5 py-0.5 rounded">42</div>
+</div>
+</div>
+</div>
+<div class="relative rounded-md overflow-hidden aspect-[3/4]">
+<div class="w-full h-full rounded-md bg-book-brown p-1.5 shadow-sm">
+<div class="w-full h-full border border-brand-gold rounded flex flex-col items-center justify-between p-2 relative">
+<div class="text-brand-gold font-bold text-center mt-2 leading-snug text-lg">الأربعون<br/>النووية</div>
+<div class="text-brand-gold text-[8px] border border-brand-gold rounded-sm px-1 py-0.5 mb-2">الإمام النووي</div>
+<div class="absolute -bottom-1 -right-1 bg-badge-bg text-black text-xs font-bold px-1.5 py-0.5 rounded">35</div>
+</div>
+</div>
+</div>
+<div class="relative rounded-md overflow-hidden aspect-[3/4]">
+<div class="w-full h-full rounded-md bg-book-green p-1.5 shadow-sm">
+<div class="w-full h-full border border-brand-gold rounded flex flex-col items-center justify-between p-2 relative">
+<div class="text-brand-gold font-bold text-center mt-2 leading-snug text-lg">رياض<br/>الصالحين</div>
+<div class="text-brand-gold text-[8px] border border-brand-gold rounded-sm px-1 py-0.5 mb-2">الإمام النووي</div>
+<div class="absolute -bottom-1 -right-1 bg-badge-bg text-black text-xs font-bold px-1.5 py-0.5 rounded">3S</div>
+</div>
+</div>
+</div>
+<div class="relative rounded-md overflow-hidden aspect-[3/4]">
+<div class="w-full h-full rounded-md bg-book-teal p-1.5 shadow-sm">
+<div class="w-full h-full border border-brand-gold rounded flex flex-col items-center justify-between p-2 relative">
+<div class="text-brand-gold font-bold text-center mt-2 leading-snug text-lg">الأشكال<br/>النووية</div>
+</div>
+</div>
+</div>
+<div class="relative rounded-md overflow-hidden aspect-[3/4]">
+<div class="w-full h-full rounded-md bg-book-green p-1.5 shadow-sm">
+<div class="w-full h-full border border-brand-gold rounded flex flex-col items-center justify-between p-2 relative">
+<div class="text-brand-gold font-bold text-center mt-2 leading-snug text-lg">الأحاديث<br/>الصلاة</div>
+</div>
+</div>
+</div>
+<div class="relative rounded-md overflow-hidden aspect-[3/4]">
+<div class="w-full h-full rounded-md bg-book-blue p-1.5 shadow-sm">
+<div class="w-full h-full border border-brand-gold rounded flex flex-col items-center justify-between p-2 relative">
+<div class="text-brand-gold font-bold text-center mt-2 leading-snug text-lg">قلق<br/>الصالحين</div>
+</div>
+</div>
+</div></div>
+</section>
+<!-- END: Available for Download Section -->
+</main>
+<!-- END: Main Content -->
+<!-- BEGIN: Bottom Navigation -->
+<nav class="fixed bottom-0 w-full bg-white border-t border-gray-200 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] rounded-t-2xl px-2 py-3 z-50" data-purpose="bottom-navigation">
+<div class="flex justify-around items-center"><button class="flex flex-col items-center focus:outline-none text-nav-active">
+<svg class="h-6 w-6 mb-1" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+<path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+</svg>
+<span class="text-[10px] font-bold">الرئيسية</span>
+</button>
+<button class="flex flex-col items-center focus:outline-none text-nav-inactive hover:text-nav-active transition-colors">
+<svg class="h-6 w-6 mb-1" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="text-[10px] font-bold">الأذكار</span>
+</button>
+<button class="flex flex-col items-center focus:outline-none text-nav-inactive hover:text-nav-active transition-colors">
+<svg class="h-6 w-6 mb-1" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="text-[10px] font-bold">الصلاة</span>
+</button>
+<button class="flex flex-col items-center focus:outline-none text-nav-inactive hover:text-nav-active transition-colors">
+<svg class="h-6 w-6 mb-1" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="text-[10px] font-bold">القرآن</span>
+</button>
+<button class="flex flex-col items-center focus:outline-none text-nav-inactive hover:text-nav-active transition-colors">
+<svg class="h-6 w-6 mb-1" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="text-[10px] font-bold">المزيد</span>
+</button></div>
+</nav>
+<!-- END: Bottom Navigation -->
+</body></html>

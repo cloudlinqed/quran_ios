@@ -76,6 +76,7 @@ import coil.decode.SvgDecoder
 import coil.request.ImageRequest
 import androidx.compose.foundation.Image
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import com.quranmedia.player.R
@@ -100,14 +101,8 @@ val scheherazadeFont = FontFamily(
     Font(R.font.scheherazade_regular, FontWeight.Bold)
 )
 
-// Updated theme colors
-val islamicGreen = Color(0xFF2E7D32)      // Green for headers/buttons (restored)
-val lightGreen = Color(0xFF4CAF50)        // Light green accent
-val darkGreen = Color(0xFF1B5E20)         // Dark green for emphasis
-val goldAccent = Color(0xFFD4AF37)        // Gold accent
-val creamBackground = Color(0xFFFDFBF7)   // Warm Beige/Cream background
-val coffeeBrown = Color(0xFF3E2723)       // Dark Coffee Brown for body text
-val softWoodBrown = Color(0xFFA1887F)     // Soft Wood Brown for dividers/borders
+// App-wide theme colors are now in AppTheme.colors (presentation/theme/AppColors.kt)
+// Reading-specific colors remain in ReadingThemeColors
 
 // Arabic surah names map (shared across composables)
 internal val surahNamesArabic = mapOf(
@@ -194,6 +189,7 @@ fun QuranPageComposable(
     pageNumber: Int,
     ayahs: List<Ayah>,
     highlightedAyah: HighlightedAyah?,
+    bookmarkedAyahHighlights: Set<HighlightedAyah> = emptySet(),
     modifier: Modifier = Modifier,
     zoomMode: ZoomMode = ZoomMode.ZOOMED,
     splitHalf: Int = 0,  // 0 = first half (or full page), 1 = second half
@@ -341,6 +337,7 @@ fun QuranPageComposable(
                             FullScreenCenteredContent(
                                 ayahs = displayAyahs,
                                 highlightedAyah = highlightedAyah,
+                                bookmarkedAyahHighlights = bookmarkedAyahHighlights,
                                 availableHeight = availableHeight,
                                 themeColors = themeColors,
                                 readingTheme = readingTheme,
@@ -354,6 +351,7 @@ fun QuranPageComposable(
                                 pageNumber = pageNumber,
                                 ayahs = displayAyahs,
                                 highlightedAyah = highlightedAyah,
+                                bookmarkedAyahHighlights = bookmarkedAyahHighlights,
                                 availableHeight = availableHeight,
                                 availableWidth = availableWidth,
                                 themeColors = themeColors,
@@ -378,6 +376,7 @@ fun QuranPageComposable(
 private fun FullScreenCenteredContent(
     ayahs: List<Ayah>,
     highlightedAyah: HighlightedAyah?,
+    bookmarkedAyahHighlights: Set<HighlightedAyah> = emptySet(),
     availableHeight: androidx.compose.ui.unit.Dp,
     themeColors: ReadingThemeColors,
     readingTheme: ReadingTheme = ReadingTheme.LIGHT,
@@ -424,9 +423,10 @@ private fun FullScreenCenteredContent(
             }
 
             surahAyahs.forEach { ayah ->
-                val isHighlighted = highlightedAyah != null &&
+                val isHighlighted = (highlightedAyah != null &&
                         highlightedAyah.surahNumber == ayah.surahNumber &&
-                        highlightedAyah.ayahNumber == ayah.ayahNumber
+                        highlightedAyah.ayahNumber == ayah.ayahNumber) ||
+                        bookmarkedAyahHighlights.any { it.surahNumber == ayah.surahNumber && it.ayahNumber == ayah.ayahNumber }
 
                 val textColor = if (isHighlighted) themeColors.highlight else themeColors.textPrimary
                 val markerBgColor = if (isHighlighted) themeColors.highlight.copy(alpha = 0.2f) else themeColors.ayahMarker.copy(alpha = 0.15f)
@@ -569,6 +569,17 @@ private fun FullScreenCenteredContent(
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
+                            .semantics {
+                                contentDescription = "آية ${ayah.ayahNumber}: ${ayah.textArabic}"
+                                customActions = listOf(
+                                    androidx.compose.ui.semantics.CustomAccessibilityAction(
+                                        label = "تفسير" // Tafseer
+                                    ) {
+                                        onAyahLongPress?.invoke(ayah, Offset.Zero)
+                                        true
+                                    }
+                                )
+                            }
                             .onGloballyPositioned { coordinates ->
                                 textPosition = coordinates.positionInRoot()
                             }
@@ -827,6 +838,7 @@ private fun FullScreenMushafContent(
     pageNumber: Int,
     ayahs: List<Ayah>,
     highlightedAyah: HighlightedAyah?,
+    bookmarkedAyahHighlights: Set<HighlightedAyah> = emptySet(),
     availableHeight: androidx.compose.ui.unit.Dp,
     availableWidth: androidx.compose.ui.unit.Dp,
     themeColors: ReadingThemeColors,
@@ -868,16 +880,17 @@ private fun FullScreenMushafContent(
     val ayahsBySurah = remember(ayahs) { ayahs.groupBy { it.surahNumber }.toList() }
 
     // Prepare rich data blocks for calculation
-    val surahBlocks = remember(ayahsBySurah, highlightedAyah) {
+    val surahBlocks = remember(ayahsBySurah, highlightedAyah, bookmarkedAyahHighlights) {
         ayahsBySurah.map { (surahNum, surahAyahs) ->
             val hasHeader = surahAyahs.any { it.ayahNumber == 1 }
-            
+
             // Build the text
             val builder = SpannableStringBuilder()
             surahAyahs.forEachIndexed { idx, ayah ->
-                val isHighlighted = highlightedAyah != null &&
+                val isHighlighted = (highlightedAyah != null &&
                     highlightedAyah.surahNumber == ayah.surahNumber &&
-                    highlightedAyah.ayahNumber == ayah.ayahNumber
+                    highlightedAyah.ayahNumber == ayah.ayahNumber) ||
+                    bookmarkedAyahHighlights.any { it.surahNumber == ayah.surahNumber && it.ayahNumber == ayah.ayahNumber }
 
                 val textColor = if (isHighlighted) highlightColorInt else primaryColorInt
                 val circleBgColor = if (isHighlighted) highlightBgColorInt else markerBgColorInt
